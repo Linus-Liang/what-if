@@ -1,3 +1,11 @@
+class Student {
+  constructor(data) {
+    this.userId = data.userId;
+    this.firstName = data.firstName;
+    this.lastName = data.lastName;
+  }
+}
+
 class Section {
   constructor(data) {
     this.isWeighted = data.isWeighted;
@@ -20,10 +28,6 @@ class Category {
     this.dateModifed = data.dateModifed;
     this.id = data.id;
   }
-
-  average(assignments) {
-    console.log(assignments.filter((assignment) => assignment.categoryId = this.id));
-  }
 }
 
 class Assignment {
@@ -42,6 +46,16 @@ class Assignment {
   }
 }
 
+class Grade {
+  constructor(data) {
+    this.id = data.id;
+    this.assignmentId = data.assignmentId;
+    this.userId = data.userId;
+    this.grade = data.grade;
+    this.feedback = data.feedback;
+  }
+}
+
 class ScoreCode {
   constructor(data) {
     this.id = data.id;
@@ -51,20 +65,5 @@ class ScoreCode {
     this.percent = data.percent;
     this.exempt = data.exempt;
     this.sectionId = data.sectionId;
-  }
-}
-
-let gradeData = new XMLHttpRequest();
-gradeData.open('GET', 'gradebook-160.json');
-gradeData.send();
-gradeData.onreadystatechange = () => {
-  if (gradeData.readyState === XMLHttpRequest.DONE && gradeData.status === 200) {
-    gradeData = JSON.parse(gradeData.response);
-    let currentSection = new Section(gradeData);
-    const Categories = gradeData.categories.map((category) => new Category(category));
-    const Assignments = gradeData.assignments.map((assignment) => new Assignment(assignment));
-    console.log(Categories, Assignments);
-    console.log(Categories[0].average(Assignments));
-    
   }
 }
