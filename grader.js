@@ -3,116 +3,118 @@ Array.prototype.isEmpty = function () {
 };
 
 Array.prototype.add = function () {
+  if (this.isEmpty()) {
+    return 0;
+  }
   return this.reduce((left, right) => left + right);
 }
 
 class GradingService {
   constructor() {
-    this.worthlessGrade = [0, 0];
-  }
-
-  normalizeGradeValue(gradeValue, scoreCodes) {
-    const numericGrade = parseInt(gradeValue);
-    if(isNaN(numericGrade)) {
-      const scoreCode = scoreCodes.find(scoreCode => scoreCode.code === gradeValue);
-      if (!scoreCode) {
-        return 'unknown';
-      }
-      return scoreCode.percent;
-    }
-    return numericGrade;
+    this.unGraded = [];
   }
 
   gradeAssignments(assignments, grades, scoreCodes) {
-    return grades.map(grade => {
+    const gradedAssignments = [];
+    for (const grade of grades) {
       const assignment = assignments.find(item => item.id === grade.assignmentId);
-      
-      const normalizedGrade = this.normalizeGradeValue(grade.grade, scoreCodes);
-      const unknownGrade = normalizedGrade === 'unknown';
 
-      const score = unknownGrade ? 0 : normalizedGrade / assignment.maxScore;
+      const numericGrade = parseInt(grade.grade);
 
-      return {
-        maxPoints: unknownGrade ? 0 : assignment.points,
-        earnedPoints: score * assignment.points,
-        grade: score,
+      const gradedAssignment = {
+        maxPoints: 0,
         categoryId: assignment.categoryId,
-        maxScore:assignment.maxScore,
+        earnedPoints: 0,
+        grade: 0,
+        maxScore: 0,
         userId: grade.userId
+      };
+
+      if(isNaN(numericGrade)) {
+        const scoreCode = scoreCodes.find(scoreCode => scoreCode.code === grade.grade);
+        if (scoreCode) {
+          numericGrade = scoreCode.percent;
+        } else {
+          this.unGraded.push(gradedAssignment);
+          continue;
+        }
       }
-    });
-  }
 
-  calculateFinalGradeValues(grade) {
-    if (grade.maxScore === 0) {
-      return this.worthlessGrade;
+      gradedAssignment.maxPoints = assignment.points;
+      gradedAssignment.maxScore = assignment.maxScore;
+
+      const score = numericGrade / assignment.maxScore;
+      gradedAssignment.earnedPoints = score * assignment.points;
+      gradedAssignment.grade = score;
+
+      gradedAssignments.push(gradedAssignment);
     }
-    return [grade.earnedPoints, grade.maxScore];
-  }
-
-  _averageCategory(category, gradedAssignments, student) {
-    const grades = gradedAssignments
-      .filter(grade => grade.categoryId === category.id && grade.userId === student.userId);
-    
-    if (grades.isEmpty()) {
-      return 0;
-    }
-
-    const accGradeValues = grades.reduce((previousGradeValues, next) => {
-      const nextGradeValues = this.calculateFinalGradeValues(next);
-
-      previousGradeValues[0] += nextGradeValues[0];
-      previousGradeValues[1] += nextGradeValues[1];
-      return nextGradeValues;
-    }, [0, 0]);
-
-    const categoryAverage = accGradeValues[0] / accGradeValues[1];
-    return categoryAverage;
+    return gradedAssignments;
   }
 
   averageCategories(students, categories, gradedAssignments) {
-    return students.map(student => {
-      return {
-        userId: student.userId,
+    const studentCollection = [];
+    for (const student of students) {
+      const grades = gradedAssignments.filter(g => g.userId === student.userId);
+      const categoryCollection = {
+        student: student.userId,
         categories: categories.map(category => {
+          const assignments = grades.filter(g => g.categoryId === category.id);
+          const earnedPoints = assignments.map(a => a.earnedPoints).add();
+          const maxPoints = assignments.map(a => a.maxPoints).add();
           return {
-            id: category.id,
+            userId: student.userId,
+            categoryId: category.id,
+            earnedPoints: earnedPoints,
+            maxPoints: maxPoints,
+            average: maxPoints !== 0 ? earnedPoints / maxPoints : 1,
             weight: category.weight,
-            average: this._averageCategory(category, gradedAssignments, student)
           }
-        })
+        }),
       }
-    });
+      studentCollection.push(categoryCollection);
+    }
+    return studentCollection;
   }
 
-  studentAverage(targetStudent, allStudentsCategories) {
-    const studentAverages = allStudentsCategories.find(student => student.userId === targetStudent.userId).categories;
-
-    studentAverages[0] = studentAverages[0].average * studentAverages[0].weight;
-
-    return studentAverages.reduce((left, right) => left + right.average * right.weight);
+  studentAverage(id, studentAverages) {
+    studentAverages = studentAverages.
+    return studentAverages.reduce((left, right) => {
+      if (typeof(left) === 'object') {
+        left = left.average * left.weight;
+      }
+      return left + right.average * right.weight;
+    });
   }
 }
 
 const testGrader = new GradingService();
 
 const testData = {
-  students: [{ userId: 100 }],
+  students: [{ userId: 100 }, { userId: 101 }],
   categories: [
-    { name: "class one", weight: 100, id: 0, }, 
-    { name: "class two", weight: 0, id: 1, }
+    { weight: 20, id: 0, name: "Homework" },
+    { weight: 50, id: 1, name: "Quiz" },
+    { weight: 30, id: 3, name: "Classwork" },
+  ],
+  assignments: [
+    { id: 0, categoryId: 0, maxScore: 100, points: 5,   name: "Homework #1" },
+    { id: 1, categoryId: 0, maxScore: 100, points: 5,   name: "Homework #2" },
+    { id: 2, categoryId: 1, maxScore: 100, points: 200, name: "Quiz Lesson 1" },
+    { id: 3, categoryId: 1, maxScore: 100, points: 200, name: "Quiz Lesson 3" },
+    { id: 4, categoryId: 2, maxScore: 5,   points: 1,   name: "Warm up Day 0x00" },
+    { id: 5, categoryId: 2, maxScore: 5,   points: 1,   name: "Warm up Day 0x01" },
+    { id: 6, categoryId: 2, maxScore: 5,   points: 1,   name: "Warm up Day 0x02" },
+    { id: 7, categoryId: 2, maxScore: 5,   points: 1,   name: "Warm up Day 0x03" },
   ],
   grades: [
-    { id: 0, assignmentId: 0, userId: 100, grade: "100", }, 
-    { id: 1, assignmentId: 1, userId: 100, grade: "b", }, 
-    { id: 2, assignmentId: 2, userId: 100, grade: "100", }, 
-    { id: 3, assignmentId: 3, userId: 100, grade: "100", }
-  ], 
-  assignments: [
-    { id: 0, categoryId: 0, maxScore: 100, points: 10,  name: "assignment one", },
-    { id: 1, categoryId: 0, maxScore: 100, points: 10,  name: "assign", }, 
-    { id: 2, categoryId: 1, maxScore: 100, points: 10,  name: "one", }, 
-    { id: 3, categoryId: 1, maxScore: 100, points: 10,  name: "two", }
+    { id: 0, assignmentId: 0, userId: 100, grade: "00" },//
+    { id: 1, assignmentId: 1, userId: 100, grade: "100" },//
+    { id: 2, assignmentId: 2, userId: 100, grade: "100" },//
+    { id: 3, assignmentId: 3, userId: 100, grade: "100" },//
+    { id: 4, assignmentId: 4, userId: 100, grade: "100" },//
+    { id: 5, assignmentId: 5, userId: 100, grade: "100" },//
+    { id: 6, assignmentId: 6, userId: 100, grade: "100" },//
   ],
   scoreCodes: [{
     "id": 1345,
@@ -182,6 +184,8 @@ const testData = {
 }
 
 const gradedAssignments = testGrader.gradeAssignments(testData.assignments, testData.grades, testData.scoreCodes);
-console.log(gradedAssignments.map(s => s.earnedPoints));
+console.log(gradedAssignments.map(s => s.earnedPoints), gradedAssignments.map(s => s.maxPoints));
 const averagedCategories = testGrader.averageCategories(testData.students, testData.categories, gradedAssignments);
-const studentZeroResults = testGrader.studentAverage(testData.students[0], averagedCategories)
+console.log(averagedCategories);
+const studentZeroResults = testGrader.studentAverage(averagedCategories)
+console.log(studentZeroResults);
