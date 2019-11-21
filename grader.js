@@ -22,12 +22,9 @@ class GradingService {
       const numericGrade = parseInt(grade.grade);
 
       const gradedAssignment = {
-        maxPoints: 0,
         categoryId: assignment.categoryId,
-        earnedPoints: 0,
-        grade: 0,
-        maxScore: 0,
-        userId: grade.userId
+        assignmentId: assignment.id,
+        userId: grade.userId,
       };
 
       if(isNaN(numericGrade)) {
@@ -57,7 +54,7 @@ class GradingService {
     for (const student of students) {
       const grades = gradedAssignments.filter(g => g.userId === student.userId);
       const categoryCollection = {
-        student: student.userId,
+        userId: student.userId,
         categories: categories.map(category => {
           const assignments = grades.filter(g => g.categoryId === category.id);
           const earnedPoints = assignments.map(a => a.earnedPoints).add();
@@ -67,24 +64,28 @@ class GradingService {
             categoryId: category.id,
             earnedPoints: earnedPoints,
             maxPoints: maxPoints,
+            zeroAssignments: assignments.length === 0,
             average: maxPoints !== 0 ? earnedPoints / maxPoints : 1,
             weight: category.weight,
-          }
+          };
         }),
-      }
+      };
       studentCollection.push(categoryCollection);
     }
     return studentCollection;
   }
 
-  studentAverage(id, studentAverages) {
-    studentAverages = studentAverages.
-    return studentAverages.reduce((left, right) => {
-      if (typeof(left) === 'object') {
-        left = left.average * left.weight;
+  studentAverage(id, studentsAverages) {
+    const studentAverages = studentsAverages.find((sa) => sa.userId === id).categories;
+    const accumulatedValues = { average: 0, withAssignments: 0 };
+    for(const averagedCategory of studentAverages) {
+      if(!averagedCategory.zeroAssignments) {
+        
       }
-      return left + right.average * right.weight;
-    });
+      accumulatedValues.zeroAssignments = false;
+      accumulatedValues.average += averagedCategory.average * averagedCategory.weight;
+    }
+    return accumulatedValues;
   }
 }
 
@@ -95,7 +96,7 @@ const testData = {
   categories: [
     { weight: 20, id: 0, name: "Homework" },
     { weight: 50, id: 1, name: "Quiz" },
-    { weight: 30, id: 3, name: "Classwork" },
+    { weight: 30, id: 2, name: "Classwork" },
   ],
   assignments: [
     { id: 0, categoryId: 0, maxScore: 100, points: 5,   name: "Homework #1" },
@@ -108,13 +109,13 @@ const testData = {
     { id: 7, categoryId: 2, maxScore: 5,   points: 1,   name: "Warm up Day 0x03" },
   ],
   grades: [
-    { id: 0, assignmentId: 0, userId: 100, grade: "00" },//
+    { id: 0, assignmentId: 0, userId: 100, grade: "100" },//
     { id: 1, assignmentId: 1, userId: 100, grade: "100" },//
     { id: 2, assignmentId: 2, userId: 100, grade: "100" },//
     { id: 3, assignmentId: 3, userId: 100, grade: "100" },//
-    { id: 4, assignmentId: 4, userId: 100, grade: "100" },//
-    { id: 5, assignmentId: 5, userId: 100, grade: "100" },//
-    { id: 6, assignmentId: 6, userId: 100, grade: "100" },//
+    { id: 4, assignmentId: 4, userId: 100, grade: "5" },//
+    { id: 5, assignmentId: 5, userId: 100, grade: "5" },//
+    { id: 6, assignmentId: 6, userId: 101, grade: "5" },//
   ],
   scoreCodes: [{
     "id": 1345,
@@ -187,5 +188,8 @@ const gradedAssignments = testGrader.gradeAssignments(testData.assignments, test
 console.log(gradedAssignments.map(s => s.earnedPoints), gradedAssignments.map(s => s.maxPoints));
 const averagedCategories = testGrader.averageCategories(testData.students, testData.categories, gradedAssignments);
 console.log(averagedCategories);
-const studentZeroResults = testGrader.studentAverage(averagedCategories)
-console.log(studentZeroResults);
+
+const studentZeroResults = testGrader.studentAverage(testData.students[0].userId, averagedCategories)
+console.log('student 0:', studentZeroResults);
+const studentOneResults = testGrader.studentAverage(testData.students[1].userId, averagedCategories)
+console.log('student 1:', studentOneResults);
