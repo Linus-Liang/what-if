@@ -65,7 +65,7 @@ class GradingService {
             earnedPoints: earnedPoints,
             maxPoints: maxPoints,
             zeroAssignments: assignments.length === 0,
-            average: maxPoints !== 0 ? earnedPoints / maxPoints : 1,
+            average: maxPoints !== 0 ? earnedPoints / maxPoints : 0,
             weight: category.weight,
           };
         }),
@@ -75,24 +75,27 @@ class GradingService {
     return studentCollection;
   }
 
-  studentAverage(id, studentsAverages) {
-    const studentAverages = studentsAverages.find((sa) => sa.userId === id).categories;
-    const accumulatedValues = { average: 0, withAssignments: 0 };
-    for(const averagedCategory of studentAverages) {
-      if(!averagedCategory.zeroAssignments) {
-        
-      }
-      accumulatedValues.zeroAssignments = false;
-      accumulatedValues.average += averagedCategory.average * averagedCategory.weight;
-    }
-    return accumulatedValues;
+  studentAverage(studentCategories) {
+    let accumulatedAverage = studentCategories.map((cat) => cat.average * cat.weight).add();
+    let totalWeight = studentCategories.map((cat) => cat.zeroAssignments ? 0 : cat.weight).add();
+    return accumulatedAverage / totalWeight;
+  }
+
+  updateStudent(student, allStudentsCategories) {
+    const studentCategories = allStudentsCategories.find((sa) => sa.userId === student.userId).categories;
+    const percent = this.studentAverage(studentCategories);
+    student.percent = percent;
+    student.percentage = percent * 100;
+    student.earnedPoints = 0;
+    student.maxWeight = 0;
+    student.categories = studentCategories;
   }
 }
 
 const testGrader = new GradingService();
 
 const testData = {
-  students: [{ userId: 100 }, { userId: 101 }],
+  students: [{ userId: 100, name: "Sunil Cram" }, { userId: 101, name: "Compter Comp" }],
   categories: [
     { weight: 20, id: 0, name: "Homework" },
     { weight: 50, id: 1, name: "Quiz" },
@@ -114,7 +117,7 @@ const testData = {
     { id: 2, assignmentId: 2, userId: 100, grade: "100" },//
     { id: 3, assignmentId: 3, userId: 100, grade: "100" },//
     { id: 4, assignmentId: 4, userId: 100, grade: "5" },//
-    { id: 5, assignmentId: 5, userId: 100, grade: "5" },//
+    { id: 5, assignmentId: 5, userId: 101, grade: "5" },//
     { id: 6, assignmentId: 6, userId: 101, grade: "5" },//
   ],
   scoreCodes: [{
@@ -185,11 +188,19 @@ const testData = {
 }
 
 const gradedAssignments = testGrader.gradeAssignments(testData.assignments, testData.grades, testData.scoreCodes);
-console.log(gradedAssignments.map(s => s.earnedPoints), gradedAssignments.map(s => s.maxPoints));
+// console.log(gradedAssignments.map(s => s.earnedPoints), gradedAssignments.map(s => s.maxPoints));
 const averagedCategories = testGrader.averageCategories(testData.students, testData.categories, gradedAssignments);
-console.log(averagedCategories);
+// console.log(averagedCategories);
+// Student
+// userId
+// name
+// percent: 0-1
+// percentage: %
+// earnedPoints
+// MaxPossible
+// categories : categories[]
 
-const studentZeroResults = testGrader.studentAverage(testData.students[0].userId, averagedCategories)
-console.log('student 0:', studentZeroResults);
-const studentOneResults = testGrader.studentAverage(testData.students[1].userId, averagedCategories)
-console.log('student 1:', studentOneResults);
+testData.students.forEach(student => {
+  testGrader.updateStudent(student, averagedCategories);
+  console.log(student.userId, student);
+});
