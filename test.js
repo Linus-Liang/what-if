@@ -1,6 +1,3 @@
-
-const testGrader = new GradingService();
-
 const testData = {
   students: [{ userId: 100, name: "Sunil Cram" }, { userId: 101, name: "Compter Comp" }],
   categories: [
@@ -24,8 +21,9 @@ const testData = {
     { id: 2, assignmentId: 2, userId: 100, grade: "100" },
     { id: 3, assignmentId: 3, userId: 100, grade: "100" },
     { id: 4, assignmentId: 4, userId: 100, grade: "5" },
-    { id: 5, assignmentId: 5, userId: 101, grade: "5" },
-    { id: 6, assignmentId: 6, userId: 101, grade: "5" },
+    { id: 4, assignmentId: 5, userId: 100, grade: "5" },
+    { id: 4, assignmentId: 6, userId: 101, grade: "5" },
+    { id: 6, assignmentId: 7, userId: 101, grade: "5" },
   ],
   scoreCodes: [{
     "id": 1345,
@@ -94,18 +92,11 @@ const testData = {
   }]
 }
 
+const testGrader = new GradingService();
 const gradedAssignments = testGrader.gradeAssignments(testData.assignments, testData.grades, testData.scoreCodes);
 const averagedCategories = testGrader.averageCategories(testData.students, testData.categories, gradedAssignments);
-// Student
-// userId
-// name
-// percent: 0-1
-// percentage: %
-// earnedPoints
-// MaxPossible
-// categories : categories[]
 
 testData.students.forEach(student => {
-  const data = testGrader.updateStudent(student, averagedCategories);
-  console.log(data.userId, data.percent, data.earnedPoints, data.maxWeight, data.categories);
+  const data = testGrader.calculateStudentData(student, averagedCategories);
+  console.log(data.userId, data.percentage + '%', `${data.earnedPoints}/${data.maxWeight}`, data.categories);
 });

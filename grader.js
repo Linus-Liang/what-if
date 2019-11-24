@@ -20,6 +20,7 @@ class GradingService {
           numericGrade = scoreCode.percent;
         } else {
           this.unGraded.push(gradedAssignment);
+          console.warn('Ungraded assignment', gradeAssignment, assignment.name);
           continue;
         }
       }
@@ -28,7 +29,7 @@ class GradingService {
       gradedAssignment.maxScore = assignment.maxScore;
       const score = numericGrade / assignment.maxScore;
       gradedAssignment.grade = score;
-      
+
       gradedAssignment.earnedPoints = score * assignment.points;
 
       gradedAssignments.push(gradedAssignment);
@@ -40,45 +41,43 @@ class GradingService {
     const studentCollection = [];
     for (const student of students) {
       const grades = gradedAssignments.filter(g => g.userId === student.userId);
-      const categoryCollection = {
+      const gradedCategories = categories.map(category => {
+        const assignments = grades.filter(g => g.categoryId === category.id);
+        const earnedPoints = assignments.map(a => a.earnedPoints).add();
+        const maxPoints = assignments.map(a => a.maxPoints).add();
+        return {
+          userId: student.userId,
+          categoryId: category.id,
+          weight: category.weight,
+          earnedPoints: earnedPoints,
+          maxPoints: maxPoints,
+          zeroAssignments: assignments.isEmpty(),
+          average: maxPoints !== 0 ? earnedPoints / maxPoints : 0,
+        };
+      });
+      studentCollection.push({
         userId: student.userId,
-        categories: categories.map(category => {
-          const assignments = grades.filter(g => g.categoryId === category.id);
-          const earnedPoints = assignments.map(a => a.earnedPoints).add();
-          const maxPoints = assignments.map(a => a.maxPoints).add();
-          return {
-            userId: student.userId,
-            categoryId: category.id,
-            earnedPoints: earnedPoints,
-            maxPoints: maxPoints,
-            zeroAssignments: assignments.length === 0,
-            average: maxPoints !== 0 ? earnedPoints / maxPoints : 0,
-            weight: category.weight,
-          };
-        }),
-      };
-      studentCollection.push(categoryCollection);
+        categories: gradedCategories,
+      });
     }
     return studentCollection;
   }
 
-  studentCategoryScores(studentCategories) {
-    let accumulatedAverage = studentCategories.map((cat) => cat.average * cat.weight).add();
-    let totalWeight = studentCategories.map((cat) => cat.zeroAssignments ? 0 : cat.weight).add();
-    return [accumulatedAverage, totalWeight];
-  }
-
-  updateStudent(student, allStudentsCategories) {
+  calculateStudentData(student, allStudentsCategories) {
     const studentCategories = allStudentsCategories.find((sa) => sa.userId === student.userId).categories;
-    const [earnedPoints, maxWeight] = this.studentCategoryScores(studentCategories);
-    const percent = earnedPoints / maxWeight;
-    return {
+
+    const earnedAverage = studentCategories.map((cat) => cat.average * cat.weight).add();
+    const totalWeight = studentCategories.map((cat) => cat.zeroAssignments ? 0 : cat.weight).add();
+
+    const percent = earnedAverage / totalWeight;
+    const studentInfo = {
       ...student,
       percent: percent,
       percentage: percent * 100,
-      earnedPoints: earnedPoints,
-      maxWeight: maxWeight,
+      earnedPoints: earnedAverage,
+      maxWeight: totalWeight,
       categories: studentCategories,
-    }
+    };
+    return studentInfo;
   }
 }
