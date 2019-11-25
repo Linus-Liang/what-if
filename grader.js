@@ -1,83 +1,93 @@
 class GradingService {
-  constructor() {
-    this.unGraded = [];
-  }
+    constructor() {
+        // grades that cannot be calculated for: having an invaild grade, or having a max score of 0
+        this.unGraded = [];
+    }
 
-  gradeAssignments(assignments, grades, scoreCodes) {
-    const gradedAssignments = [];
-    for (const grade of grades) {
-      const assignment = assignments.find(item => item.id === grade.assignmentId);
-      const gradedAssignment = {
-        categoryId: assignment.categoryId,
-        assignmentId: assignment.id,
-        userId: grade.userId,
-      };
+    // 
+    gradeAssignments(assignments, grades, scoreCodes) {
+        const gradedAssignments = [];
+        for (const grade of grades) {
+            const assignment = assignments.find(item => item.id === grade.assignmentId);
+            const gradedAssignment = {
+                categoryId: assignment.categoryId,
+                assignmentId: assignment.id,
+                userId: grade.userId,
+                extraCredit: assignment.extraCredit,
+            };
 
-      const numericGrade = parseInt(grade.grade);
-      if(isNaN(numericGrade)) {
-        const scoreCode = scoreCodes.find(scoreCode => scoreCode.code === grade.grade);
-        if (scoreCode) {
-          numericGrade = scoreCode.percent;
-        } else {
-          this.unGraded.push(gradedAssignment);
-          console.warn('Ungraded assignment', gradeAssignment, assignment.name);
-          continue;
+            const numericGrade = parseInt(grade.grade);
+            if (isNaN(numericGrade)) {
+                const scoreCode = scoreCodes.find(scoreCode => scoreCode.code === grade.grade);
+                if (scoreCode) {
+                    numericGrade = scoreCode.percent;
+                } else {
+                    this.unGraded.push(gradedAssignment);
+                    console.warn('Ungraded assignment', gradedAssignment, assignment.name);
+                    continue;
+                }
+            }
+
+            if (assignment.maxScore === 0) {
+                this.unGraded.push(gradedAssignment);
+                console.warn('Ungraded assignment', gradedAssignment, assignment.name);
+                continue;
+            }
+
+            const score = numericGrade / assignment.maxScore;
+            gradedAssignment.maxPoints    = assignment.points;
+            gradedAssignment.maxScore     = assignment.maxScore;
+            gradedAssignment.grade        = score;
+            gradedAssignment.earnedPoints = score * assignment.points;
+
+            gradedAssignments.push(gradedAssignment);
         }
-      }
-
-      gradedAssignment.maxPoints = assignment.points;
-      gradedAssignment.maxScore = assignment.maxScore;
-      const score = numericGrade / assignment.maxScore;
-      gradedAssignment.grade = score;
-
-      gradedAssignment.earnedPoints = score * assignment.points;
-
-      gradedAssignments.push(gradedAssignment);
+        return gradedAssignments;
     }
-    return gradedAssignments;
-  }
 
-  averageCategories(students, categories, gradedAssignments) {
-    const studentCollection = [];
-    for (const student of students) {
-      const grades = gradedAssignments.filter(g => g.userId === student.userId);
-      const gradedCategories = categories.map(category => {
-        const assignments = grades.filter(g => g.categoryId === category.id);
-        const earnedPoints = assignments.map(a => a.earnedPoints).add();
-        const maxPoints = assignments.map(a => a.maxPoints).add();
-        return {
-          userId: student.userId,
-          categoryId: category.id,
-          weight: category.weight,
-          earnedPoints: earnedPoints,
-          maxPoints: maxPoints,
-          zeroAssignments: assignments.isEmpty(),
-          average: maxPoints !== 0 ? earnedPoints / maxPoints : 0,
+    averageCategories(students, categories, gradedAssignments) {
+        const studentCollection = [];
+        for (const student of students) {
+            const grades           = gradedAssignments.filter(g => g.userId === student.userId);
+            const gradedCategories = categories.map(category => {
+                const assignments  = grades.filter(g => g.categoryId === category.id);
+                const earnedPoints = assignments.isEmpty() ? 0 : assignments.sum('earnedPoints');
+                const maxPoints    = assignments.isEmpty() ? 0 : assignments.sum(a => a.extraCredit ? 0 : a.maxPoints);                
+                return {
+                    userId: student.userId,
+                    categoryId: category.id,
+                    weight: category.weight,
+                    earnedPoints: earnedPoints,
+                    maxPoints: maxPoints,
+                    average: maxPoints !== 0 ? earnedPoints / maxPoints : 0,
+                };
+            });
+            studentCollection.push({
+                userId: student.userId,
+                categories: gradedCategories,
+            });
+        }
+        return studentCollection;
+    }
+
+    calculateStudentData(student, allStudentsCategories) {
+        const studentCategories = allStudentsCategories.find((sa) => sa.userId === student.userId).categories;
+
+        const earnedAverage = studentCategories.sum(cat => cat.average * cat.weight);
+        const totalWeight   = studentCategories.sum(cat => cat.maxPoints === 0 ? 0 : cat.weight);
+        const percent       = earnedAverage / totalWeight;
+
+        const studentInfo = {
+            ...student,
+            percent: percent,
+            percentage: percent * 100,
+            earnedPoints: earnedAverage,
+            maxWeight: totalWeight,
+            categories: studentCategories,
         };
-      });
-      studentCollection.push({
-        userId: student.userId,
-        categories: gradedCategories,
-      });
+        if (totalWeight === 0) {
+            console.warn(`Student ${student.name} (id: ${student.userId}) has `);
+        }
+        return studentInfo;
     }
-    return studentCollection;
-  }
-
-  calculateStudentData(student, allStudentsCategories) {
-    const studentCategories = allStudentsCategories.find((sa) => sa.userId === student.userId).categories;
-
-    const earnedAverage = studentCategories.map((cat) => cat.average * cat.weight).add();
-    const totalWeight = studentCategories.map((cat) => cat.zeroAssignments ? 0 : cat.weight).add();
-
-    const percent = earnedAverage / totalWeight;
-    const studentInfo = {
-      ...student,
-      percent: percent,
-      percentage: percent * 100,
-      earnedPoints: earnedAverage,
-      maxWeight: totalWeight,
-      categories: studentCategories,
-    };
-    return studentInfo;
-  }
 }
