@@ -1,5 +1,7 @@
 const testData = {
-  students: [{ userId: 100, name: "Sunil Cram" }, { userId: 101, name: "Compter Comp" }],
+  students: [{ userId: 100, name: "Sunil Cram" }, 
+  // { userId: 101, name: "Compter Comp" }
+],
   categories: [
     { weight: 20, id: 0, name: "Homework" },
     { weight: 50, id: 1, name: "Quiz" },
@@ -13,17 +15,17 @@ const testData = {
     { id: 4, categoryId: 2, maxScore: 5,   extraCredit: false, points: 1,   name: "Warm up Day 0x00" },
     { id: 5, categoryId: 2, maxScore: 5,   extraCredit: false, points: 1,   name: "Warm up Day 0x01" },
     { id: 6, categoryId: 2, maxScore: 5,   extraCredit: false, points: 1,   name: "Warm up Day 0x02" },
-    { id: 7, categoryId: 2, maxScore: 5,   extraCredit: true, points: 1,   name: "Warm up Day 0x03" },
+    { id: 7, categoryId: 2, maxScore: 5,   extraCredit: true,  points: 1,   name: "Warm up Day 0x03" },
   ],
   grades: [
-    { id: 0, assignmentId: 0, userId: 100, grade: "100" },
-    { id: 1, assignmentId: 1, userId: 100, grade: "100" },
-    { id: 2, assignmentId: 2, userId: 100, grade: "100" },
-    { id: 3, assignmentId: 3, userId: 100, grade: "100" },
-    { id: 4, assignmentId: 4, userId: 100, grade: "5" },
-    { id: 4, assignmentId: 5, userId: 100, grade: "5" },
-    // { id: 4, assignmentId: 6, userId: 101, grade: "5" },
-    // { id: 6, assignmentId: 7, userId: 101, grade: "5" },
+    { id: 0, assignmentId: 0, userId: 100, exempt: false, grade: "100" },
+    { id: 1, assignmentId: 1, userId: 100, exempt: false, grade: "100" },
+    { id: 2, assignmentId: 2, userId: 100, exempt: false, grade: "100" },
+    { id: 3, assignmentId: 3, userId: 100, exempt: false, grade: "100" },
+    { id: 4, assignmentId: 4, userId: 100, exempt: false, grade: "5" },
+    { id: 4, assignmentId: 5, userId: 100, exempt: false, grade: "5" },
+    { id: 4, assignmentId: 6, userId: 101, exempt: false, grade: "5" },
+    { id: 6, assignmentId: 7, userId: 101, exempt: false, grade: "5" },
   ],
   scoreCodes: [{
     "id": 1345,

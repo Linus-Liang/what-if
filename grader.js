@@ -14,6 +14,7 @@ class GradingService {
                 assignmentId: assignment.id,
                 userId: grade.userId,
                 extraCredit: assignment.extraCredit,
+                exempt: grade.exempt,
             };
 
             const numericGrade = parseInt(grade.grade);
@@ -21,16 +22,17 @@ class GradingService {
                 const scoreCode = scoreCodes.find(scoreCode => scoreCode.code === grade.grade);
                 if (scoreCode) {
                     numericGrade = scoreCode.percent;
+                    gradedAssignment.exempt = scoreCode.exempt;
                 } else {
                     this.unGraded.push(gradedAssignment);
-                    console.warn('Ungraded assignment', gradedAssignment, assignment.name);
+                    console.warn('Ungraded assignment, cause: scoreCode does not exist or grade is not a number', gradedAssignment, assignment.name);
                     continue;
                 }
             }
 
             if (assignment.maxScore === 0) {
                 this.unGraded.push(gradedAssignment);
-                console.warn('Ungraded assignment', gradedAssignment, assignment.name);
+                console.warn('Ungraded assignment, cause: a maxScore of 0', gradedAssignment, assignment.name);
                 continue;
             }
 
@@ -51,8 +53,8 @@ class GradingService {
             const grades           = gradedAssignments.filter(g => g.userId === student.userId);
             const gradedCategories = categories.map(category => {
                 const assignments  = grades.filter(g => g.categoryId === category.id);
-                const earnedPoints = assignments.isEmpty() ? 0 : assignments.sum('earnedPoints');
-                const maxPoints    = assignments.isEmpty() ? 0 : assignments.sum(a => a.extraCredit ? 0 : a.maxPoints);                
+                const earnedPoints = assignments.isEmpty() ? 0 : assignments.sum(a => a.exempt ? 0 : a.earnedPoints);
+                const maxPoints    = assignments.isEmpty() ? 0 : assignments.sum(a => a.extraCredit || a.exempt ? 0 : a.maxPoints);                
                 return {
                     userId: student.userId,
                     categoryId: category.id,
@@ -86,7 +88,7 @@ class GradingService {
             categories: studentCategories,
         };
         if (totalWeight === 0) {
-            console.warn(`Student ${student.name} (id: ${student.userId}) has `);
+            console.warn(`Student ${student.name} (id: ${student.userId}) has no assignments`);
         }
         return studentInfo;
     }
