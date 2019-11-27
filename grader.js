@@ -36,6 +36,13 @@ class GradingService {
                 continue;
             }
 
+            if (gradedAssignment.maxPoints > 0 && gradedAssignment.maxScore > 0 && 
+                gradedAssignment.grade > 0     && gradedAssignment.earnedPoints> 0) {
+                this.unGraded.push(gradedAssignment);
+                console.warn('Ungraded assignment, cause: negative value(s)', gradedAssignment, assignment.name);
+                continue;
+            }
+
             const score = numericGrade / assignment.maxScore;
             gradedAssignment.maxPoints    = assignment.points;
             gradedAssignment.maxScore     = assignment.maxScore;
