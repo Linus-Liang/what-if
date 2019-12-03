@@ -7,15 +7,38 @@
     <title>Document</title>
   </head>
   <body>
-    <div data-bind=""></div>
+    <ul data-bind="foreach: { data: gradedStudents, as: 'student' }">
+      <li>
+        <ul data-bind="foreach: { data: student, as: 'category' }">
+          <li data-bind="text: category.name"></li>
+        </tr>
+      </li>
+    </ul>
 
     <script src="utils.js"></script>
     <script src="grader.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.5.0/knockout-min.js"></script>
-    <script>
-      ko.applyBindings();
-    </script>
     <script src="test.js"></script>
+    <script>
+      function viewModel(students, categories, assignments, grades, scoreCodes) {
+        const grader = new GradingService();
+        
+        const gradedAssignments = grader.gradeAssignments(assignments, grades, scoreCodes);
+        const averagedStudents = grader.averageStudents(students, categories, gradedAssignments);
+        
+        this.gradedStudents = averagedStudents.map(s => s.categories.map(ac => {
+          ac.name = categories.filter(c => ac.categoryId === c.id).name;
+          return ac;
+        }));
+
+        // students.forEach(student => {
+        //   const data = grader.calculateStudentData(student, averagedCategories);
+        //   console.log(data.userId, data.percentage + '%', `${data.earnedPoints}/${data.maxWeight}`, data.categories);
+        // });
+      }
+      const view = new viewModel(testData.students, testData.categories, testData.assignments, testData.grades, testData.scoreCodes);
+      ko.applyBindings(view);
+    </script>
 
     
   </body>

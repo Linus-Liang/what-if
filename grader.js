@@ -54,7 +54,7 @@ class GradingService {
         return gradedAssignments;
     }
 
-    averageCategories(students, categories, gradedAssignments) {
+    averageStudents(students, categories, gradedAssignments) {
         const studentCollection = [];
         for (const student of students) {
             const grades           = gradedAssignments.filter(g => g.userId === student.userId);

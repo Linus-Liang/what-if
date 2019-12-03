@@ -93,12 +93,3 @@ const testData = {
     "sectionId": 160
   }]
 }
-
-const testGrader = new GradingService();
-const gradedAssignments = testGrader.gradeAssignments(testData.assignments, testData.grades, testData.scoreCodes);
-const averagedCategories = testGrader.averageCategories(testData.students, testData.categories, gradedAssignments);
-
-testData.students.forEach(student => {
-  const data = testGrader.calculateStudentData(student, averagedCategories);
-  console.log(data.userId, data.percentage + '%', `${data.earnedPoints}/${data.maxWeight}`, data.categories);
-});
