@@ -7,13 +7,46 @@
     <title>Document</title>
   </head>
   <body>
-    <ul data-bind="foreach: { data: gradedStudents, as: 'student' }">
-      <li>
-        <ul data-bind="foreach: { data: student, as: 'category' }">
-          <li data-bind="text: category.name"></li>
+    <!-- <div data-bind="foreach: { data: gradedStudents, as: 'student' }">
+      <table>
+        <tbody data-bind="foreach: student">
+          <div data-bind="text: JSON.stringify( $data)"></div>
+        </tbody>
+      </table>
+    </div> -->
+
+    <table>
+      <tbody>
+        <tr>
+          <td><h5>Assignment Name</h5></td>
+          <td><h5>Score</h5></td>
+          <td><h5>Points</h5></td>
+          <td><h5>Percentage</h5></td>
         </tr>
-      </li>
-    </ul>
+      </tbody>
+      <tbody data-bind="foreach: { data: assignments, as: 'assignment' }">
+        <tr>
+          <td data-bind="text: assignment.name"></td>
+          <td>
+            <span data-bind="text: assignment.earnedScore"></span>/
+            <span data-bind="text: assignment.maxScore"></span>
+          </td>
+          <td>
+            <span data-bind="text: assignment.earnedPoints"></span>/
+            <span data-bind="text: assignment.points"></span>
+          </td>
+          <td>
+            <span data-bind="text: assignment.grade * 100"></span>%
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <style>
+      table, tr, td {
+        border: 1px solid black;
+      }
+    </style>
 
     <script src="utils.js"></script>
     <script src="grader.js"></script>
@@ -25,16 +58,24 @@
         
         const gradedAssignments = grader.gradeAssignments(assignments, grades, scoreCodes);
         const averagedStudents = grader.averageStudents(students, categories, gradedAssignments);
-        
-        this.gradedStudents = averagedStudents.map(s => s.categories.map(ac => {
-          ac.name = categories.filter(c => ac.categoryId === c.id).name;
-          return ac;
+
+        this.assignments = ko.observableArray(assignments.map(a => {
+          const calculatedGrade = gradedAssignments.find(ga => ga.assignmentId === a.id);
+          const mergedAssignment = { ...a, ...calculatedGrade };
+          mergedAssignment.earnedScore = ko.pureComputed(function() {
+            return assignment.grade * assignment.maxScore;
+          });
+          console.log(mergedAssignment);
+          
+          return mergedAssignment;
         }));
 
-        // students.forEach(student => {
-        //   const data = grader.calculateStudentData(student, averagedCategories);
-        //   console.log(data.userId, data.percentage + '%', `${data.earnedPoints}/${data.maxWeight}`, data.categories);
-        // });
+        this.gradedStudents = ko.observableArray(averagedStudents.map(s => {
+          return ko.observableArray(s.categories.map(ac => {
+            ac.name = categories.find(c => ac.categoryId === c.id).name;
+            return ac;
+          }))
+        }));
       }
       const view = new viewModel(testData.students, testData.categories, testData.assignments, testData.grades, testData.scoreCodes);
       ko.applyBindings(view);
