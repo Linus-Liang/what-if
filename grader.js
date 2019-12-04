@@ -79,8 +79,8 @@ class GradingService {
         return studentCollection;
     }
 
-    calculateStudentData(student, allStudentsCategories) {
-        const studentCategories = allStudentsCategories.find((sa) => sa.userId === student.userId).categories;
+    calculateStudentData(student, studentCollection) {
+        const studentCategories = studentCollection.find((sa) => sa.userId === student.userId).categories;
 
         const earnedAverage = studentCategories.sum(cat => cat.average * cat.weight);
         const totalWeight   = studentCategories.sum(cat => cat.maxPoints === 0 ? 0 : cat.weight);

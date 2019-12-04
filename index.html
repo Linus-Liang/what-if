@@ -4,28 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
+    <title>What-If</title>
   </head>
   <body>
-    <!-- <div data-bind="foreach: { data: gradedStudents, as: 'student' }">
-      <table>
-        <tbody data-bind="foreach: student">
-          <div data-bind="text: JSON.stringify( $data)"></div>
-        </tbody>
-      </table>
-    </div> -->
+    <table>
+      <tbody>
+        <tr>
+          <td><h5>Category</h5></td>
+          <td></td>
+        </tr>
+      </tbody>
+      <tbody data-bind="foreach: { data: categoriesView, as: 'category' }">
+        <tr>
+          <td data-bind="text: category.displayName"></td>
+          <td>
+            <span data-bind="text: category.earnedWeight"></span>/
+            <span data-bind="text: category.weight"></span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
 
     <table>
       <tbody>
         <tr>
+          <td><h5>Category</h5></td>
           <td><h5>Assignment Name</h5></td>
           <td><h5>Score</h5></td>
           <td><h5>Points</h5></td>
           <td><h5>Percentage</h5></td>
         </tr>
       </tbody>
-      <tbody data-bind="foreach: { data: gradedAssignments, as: 'assignment' }">
+      <tbody data-bind="foreach: { data: assignmentView, as: 'assignment' }">
         <tr>
+          <td data-bind="text: assignment.categoryName"></td>
           <td data-bind="text: assignment.name"></td>
           <td>
             <span data-bind="text: assignment.earnedScore"></span>/
@@ -53,23 +65,65 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.5.0/knockout-min.js"></script>
     <script src="test.js"></script>
     <script>
-      function viewModel(targetstudentId, students, categories, assignments, grades, scoreCodes) {
-        const grader = new GradingService();
 
-        this.targetstudentId = ko.observable(targetstudentId);
-        this.grades = ko.observableArray(grades);
-        this.gradedAssignments = ko.pureComputed(() => {
-          return grader.gradeAssignments(assignments, this.grades(), scoreCodes).map(ga => {
-            const assginment = assignments.find(a => a.id === ga.assignmentId);
-            ga.name = assginment.name;
-            ga.points = ;
-            ga.percentage = ga.grade * 100;
-            return ga;
+
+function GradeEntry(a){
+  const self = this;
+  self.name = a.name;
+  self.grade = ko.observable(a.grade);
+}
+
+      function viewModel(targetstudentId, students, categories, assignments, grades, scoreCodes) {
+        const self = this;
+        
+        const _gradingService = new GradingService();
+
+        this.targetstudentId = ko.observable([]);
+        this.students = ko.observable([]);
+        this.categories = ko.observable([]);
+        this.assignments = ko.observable([]);
+        this.grades = ko.observable([]);
+        this.scoreCodes = ko.observable([]);
+
+        this.gradedAssignments = ko.observableArray([]);
+        this.assignmentView = ko.observableArray([]);
+
+        function generateAssignmentView(){
+          return self.assignments().map(a => {
+            const gradedAssignment = self.gradedAssignments().find(ga => a.id === ga.assignmentId);
+            const assignmentCategory = self.categories().find(c => c.id === gradedAssignment.categoryId);
+            gradedAssignment.name = a.name;
+            gradedAssignment.earnedScore = gradedAssignment.grade * gradedAssignment.maxScore;
+            gradedAssignment.points = gradedAssignment.grade * gradedAssignment.maxPoints;
+            gradedAssignment.percentage = gradedAssignment.grade * 100;
+            gradedAssignment.categoryName = assignmentCategory.name;
+            return gradedAssignment;
+          });
+        }
+
+        this.studentCollection = ko.observableArray([]);
+        this.studentCategories = ko.pureComputed(() => self.studentCollection().find((sc) => sc.userId === self.targetstudentId()).categories);
+        this.categoriesView = ko.pureComputed(() => {
+          return self.categories().map(c => { 
+            const gradedCategory = self.studentCategories().find(gc => c.id === gc.categoryId); 
+            gradedCategory.displayName = c.name + '(' + c.weight + ')';
+            gradedCategory.earnedWeight = gradedCategory.average * gradedCategory.weight;
+            return gradedCategory;
           });
         });
-        this.categories = ko.pureComputed(() => {
-          const studentsCategories = grader.averageStudents(students, categories, gradedAssignments);
-          return studentsCategories.find(as => as.userId === this.targetstudentId()).categories;
+
+        this.studentSummary = ko.pureComputed(() => {
+          return grader.calculateStudentData(self.targetstudentId(), self.studentCollection())
+        });
+        
+        this.autoCompute = ko.pureComputed(() => {
+          const grades = self.grades();
+          if(self.assign .... self.isEditing()){
+              self.gradedAssignments(grader.gradeAssignments(self.assignments(), self.grades(), self.scoreCodes()));
+              self.studentCollection(grader.averageStudents(self.students(), self.categories(), self.gradedAssignments()));
+          }
+        
+          
         });
         
         // this.gradedStudents = ko.observableArray(averagedStudents.map(s => {
@@ -78,9 +132,26 @@
         //     return ac;
         //   }))
         // }));
+
+        this.init = function() {
+          self.targetstudentId(targetstudentId);
+          self.students(students);
+          self.categories(categories);
+          self.assignments(assignments);
+          self.scoreCodes(scoreCodes);
+          self.grades(grades);
+          
+          sekf.autoCompute();
+        }
+
+        this.init();
       }
+
+
+      
       const view = new viewModel(100, testData.students, testData.categories, testData.assignments, testData.grades, testData.scoreCodes);
-      ko.applyBindings(view);
+      
+      ko.applyBindings( view);
     </script>
 
     
