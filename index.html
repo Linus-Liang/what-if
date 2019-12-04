@@ -24,7 +24,7 @@
           <td><h5>Percentage</h5></td>
         </tr>
       </tbody>
-      <tbody data-bind="foreach: { data: assignments, as: 'assignment' }">
+      <tbody data-bind="foreach: { data: gradedAssignments, as: 'assignment' }">
         <tr>
           <td data-bind="text: assignment.name"></td>
           <td>
@@ -36,7 +36,7 @@
             <span data-bind="text: assignment.points"></span>
           </td>
           <td>
-            <span data-bind="text: assignment.grade * 100"></span>%
+            <span data-bind="text: assignment.percentage"></span>%
           </td>
         </tr>
       </tbody>
@@ -53,31 +53,33 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.5.0/knockout-min.js"></script>
     <script src="test.js"></script>
     <script>
-      function viewModel(students, categories, assignments, grades, scoreCodes) {
+      function viewModel(targetstudentId, students, categories, assignments, grades, scoreCodes) {
         const grader = new GradingService();
-        
-        const gradedAssignments = grader.gradeAssignments(assignments, grades, scoreCodes);
-        const averagedStudents = grader.averageStudents(students, categories, gradedAssignments);
 
-        this.assignments = ko.observableArray(assignments.map(a => {
-          const calculatedGrade = gradedAssignments.find(ga => ga.assignmentId === a.id);
-          const mergedAssignment = { ...a, ...calculatedGrade };
-          mergedAssignment.earnedScore = ko.pureComputed(function() {
-            return assignment.grade * assignment.maxScore;
+        this.targetstudentId = ko.observable(targetstudentId);
+        this.grades = ko.observableArray(grades);
+        this.gradedAssignments = ko.pureComputed(() => {
+          return grader.gradeAssignments(assignments, this.grades(), scoreCodes).map(ga => {
+            const assginment = assignments.find(a => a.id === ga.assignmentId);
+            ga.name = assginment.name;
+            ga.points = ;
+            ga.percentage = ga.grade * 100;
+            return ga;
           });
-          console.log(mergedAssignment);
-          
-          return mergedAssignment;
-        }));
-
-        this.gradedStudents = ko.observableArray(averagedStudents.map(s => {
-          return ko.observableArray(s.categories.map(ac => {
-            ac.name = categories.find(c => ac.categoryId === c.id).name;
-            return ac;
-          }))
-        }));
+        });
+        this.categories = ko.pureComputed(() => {
+          const studentsCategories = grader.averageStudents(students, categories, gradedAssignments);
+          return studentsCategories.find(as => as.userId === this.targetstudentId()).categories;
+        });
+        
+        // this.gradedStudents = ko.observableArray(averagedStudents.map(s => {
+        //   return ko.observableArray(s.categories.map(ac => {
+        //     ac.name = categories.find(c => ac.categoryId === c.id).name;
+        //     return ac;
+        //   }))
+        // }));
       }
-      const view = new viewModel(testData.students, testData.categories, testData.assignments, testData.grades, testData.scoreCodes);
+      const view = new viewModel(100, testData.students, testData.categories, testData.assignments, testData.grades, testData.scoreCodes);
       ko.applyBindings(view);
     </script>
 
