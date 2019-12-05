@@ -7,56 +7,61 @@
     <title>What-If</title>
   </head>
   <body>
-    <table>
-      <tbody>
-        <tr>
-          <td><h5>Category</h5></td>
-          <td></td>
-        </tr>
-      </tbody>
-      <tbody data-bind="foreach: { data: categoriesView, as: 'category' }">
-        <tr>
-          <td data-bind="text: category.displayName"></td>
-          <td>
-            <span data-bind="text: category.earnedWeight"></span>/
-            <span data-bind="text: category.weight"></span>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <div id="tables">
+      <table>
+        <tbody>
+          <tr>
+            <td><h5>Category</h5></td>
+            <td></td>
+          </tr>
+        </tbody>
+        <tbody data-bind="foreach: { data: categoriesView, as: 'category' }">
+          <tr>
+            <td data-bind="text: category.displayName"></td>
+            <td>
+              <span data-bind="text: category.earnedWeight"></span>/
+              <span data-bind="text: category.weight"></span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
 
-    <table>
-      <tbody>
-        <tr>
-          <td><h5>Category</h5></td>
-          <td><h5>Assignment Name</h5></td>
-          <td><h5>Score</h5></td>
-          <td><h5>Points</h5></td>
-          <td><h5>Percentage</h5></td>
-        </tr>
-      </tbody>
-      <tbody data-bind="foreach: { data: assignmentView, as: 'assignment' }">
-        <tr>
-          <td data-bind="text: assignment.categoryName"></td>
-          <td data-bind="text: assignment.name"></td>
-          <td>
-            <span data-bind="text: assignment.earnedScore"></span>/
-            <span data-bind="text: assignment.maxScore"></span>
-          </td>
-          <td>
-            <span data-bind="text: assignment.earnedPoints"></span>/
-            <span data-bind="text: assignment.points"></span>
-          </td>
-          <td>
-            <span data-bind="text: assignment.percentage"></span>%
-          </td>
-        </tr>
-      </tbody>
-    </table>
-
+      <table>
+        <tbody>
+          <tr>
+            <td><h5>Category</h5></td>
+            <td><h5>Assignment Name</h5></td>
+            <td><h5>Score</h5></td>
+            <td><h5>Points</h5></td>
+            <td><h5>Percentage</h5></td>
+          </tr>
+        </tbody>
+        <tbody data-bind="foreach: { data: assignmentView, as: 'assignment' }">
+          <tr>
+            <td data-bind="text: assignment.categoryName"></td>
+            <td data-bind="text: assignment.name"></td>
+            <td>
+              <input data-bind="textInput: assignment.earnedScore">/
+              <span data-bind="text: assignment.maxScore"></span>
+            </td>
+            <td>
+              <span data-bind="text: assignment.earnedPoints"></span>/
+              <span data-bind="text: assignment.points"></span>
+            </td>
+            <td>
+              <span data-bind="text: assignment.percentage"></span>%
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
     <style>
       table, tr, td {
         border: 1px solid black;
+      }
+      input {
+        width: 30px;
       }
     </style>
 
@@ -64,96 +69,6 @@
     <script src="grader.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.5.0/knockout-min.js"></script>
     <script src="test.js"></script>
-    <script>
-
-
-function GradeEntry(a){
-  const self = this;
-  self.name = a.name;
-  self.grade = ko.observable(a.grade);
-}
-
-      function viewModel(targetstudentId, students, categories, assignments, grades, scoreCodes) {
-        const self = this;
-        
-        const _gradingService = new GradingService();
-
-        this.targetstudentId = ko.observable([]);
-        this.students = ko.observable([]);
-        this.categories = ko.observable([]);
-        this.assignments = ko.observable([]);
-        this.grades = ko.observable([]);
-        this.scoreCodes = ko.observable([]);
-
-        this.gradedAssignments = ko.observableArray([]);
-        this.assignmentView = ko.observableArray([]);
-
-        function generateAssignmentView(){
-          return self.assignments().map(a => {
-            const gradedAssignment = self.gradedAssignments().find(ga => a.id === ga.assignmentId);
-            const assignmentCategory = self.categories().find(c => c.id === gradedAssignment.categoryId);
-            gradedAssignment.name = a.name;
-            gradedAssignment.earnedScore = gradedAssignment.grade * gradedAssignment.maxScore;
-            gradedAssignment.points = gradedAssignment.grade * gradedAssignment.maxPoints;
-            gradedAssignment.percentage = gradedAssignment.grade * 100;
-            gradedAssignment.categoryName = assignmentCategory.name;
-            return gradedAssignment;
-          });
-        }
-
-        this.studentCollection = ko.observableArray([]);
-        this.studentCategories = ko.pureComputed(() => self.studentCollection().find((sc) => sc.userId === self.targetstudentId()).categories);
-        this.categoriesView = ko.pureComputed(() => {
-          return self.categories().map(c => { 
-            const gradedCategory = self.studentCategories().find(gc => c.id === gc.categoryId); 
-            gradedCategory.displayName = c.name + '(' + c.weight + ')';
-            gradedCategory.earnedWeight = gradedCategory.average * gradedCategory.weight;
-            return gradedCategory;
-          });
-        });
-
-        this.studentSummary = ko.pureComputed(() => {
-          return grader.calculateStudentData(self.targetstudentId(), self.studentCollection())
-        });
-        
-        this.autoCompute = ko.pureComputed(() => {
-          const grades = self.grades();
-          if(self.assign .... self.isEditing()){
-              self.gradedAssignments(grader.gradeAssignments(self.assignments(), self.grades(), self.scoreCodes()));
-              self.studentCollection(grader.averageStudents(self.students(), self.categories(), self.gradedAssignments()));
-          }
-        
-          
-        });
-        
-        // this.gradedStudents = ko.observableArray(averagedStudents.map(s => {
-        //   return ko.observableArray(s.categories.map(ac => {
-        //     ac.name = categories.find(c => ac.categoryId === c.id).name;
-        //     return ac;
-        //   }))
-        // }));
-
-        this.init = function() {
-          self.targetstudentId(targetstudentId);
-          self.students(students);
-          self.categories(categories);
-          self.assignments(assignments);
-          self.scoreCodes(scoreCodes);
-          self.grades(grades);
-          
-          sekf.autoCompute();
-        }
-
-        this.init();
-      }
-
-
-      
-      const view = new viewModel(100, testData.students, testData.categories, testData.assignments, testData.grades, testData.scoreCodes);
-      
-      ko.applyBindings( view);
-    </script>
-
-    
+    <script src="view.js"></script>
   </body>
 </html>
