@@ -7,9 +7,10 @@ class GradingService {
     // 
     gradeAssignments(assignments, grades, scoreCodes) {
         const gradedAssignments = [];
-        for (const grade of grades) {
+        for (const grade of grades) {            
             const assignment = assignments.find(item => item.id === grade.assignmentId);
             const gradedAssignment = {
+                id: grade.id,
                 categoryId: assignment.categoryId,
                 assignmentId: assignment.id,
                 userId: grade.userId,
@@ -43,11 +44,12 @@ class GradingService {
                 continue;
             }
 
-            const score = numericGrade / assignment.maxScore;
-            gradedAssignment.maxPoints    = assignment.points;
+            gradedAssignment.earnedScore  = numericGrade;
             gradedAssignment.maxScore     = assignment.maxScore;
-            gradedAssignment.grade        = score;
-            gradedAssignment.earnedPoints = score * assignment.points;
+            gradedAssignment.grade        = gradedAssignment.earnedScore / gradedAssignment.maxScore;
+
+            gradedAssignment.maxPoints    = assignment.points;
+            gradedAssignment.earnedPoints = gradedAssignment.grade * gradedAssignment.maxPoints;
 
             gradedAssignments.push(gradedAssignment);
         }
@@ -79,9 +81,7 @@ class GradingService {
         return studentCollection;
     }
 
-    calculateStudentData(student, studentCollection) {
-        const studentCategories = studentCollection.find((sa) => sa.userId === student.userId).categories;
-
+    calculateStudentData(studentCategories) {
         const earnedAverage = studentCategories.sum(cat => cat.average * cat.weight);
         const totalWeight   = studentCategories.sum(cat => cat.maxPoints === 0 ? 0 : cat.weight);
         const percent       = earnedAverage / totalWeight;

@@ -8,7 +8,7 @@
   </head>
   <body>
     <div id="tables">
-      <table>
+      <!-- <table>
         <tbody>
           <tr>
             <td><h5>Category</h5></td>
@@ -24,11 +24,11 @@
             </td>
           </tr>
         </tbody>
-      </table>
+      </table> -->
 
       <table>
         <tbody>
-          <tr>
+          <tr style="text-align: center;">
             <td><h5>Category</h5></td>
             <td><h5>Assignment Name</h5></td>
             <td><h5>Score</h5></td>
@@ -40,20 +40,19 @@
           <tr>
             <td data-bind="text: assignment.categoryName"></td>
             <td data-bind="text: assignment.name"></td>
-            <td>
-              <input data-bind="textInput: assignment.earnedScore">/
-              <span data-bind="text: assignment.maxScore"></span>
+            <td style="text-align: center;">
+              <input data-bind="textInput: assignment.earnedScore"></input>/<span data-bind="text: assignment.maxScore"></span>
             </td>
-            <td>
-              <span data-bind="text: assignment.earnedPoints"></span>/
-              <span data-bind="text: assignment.points"></span>
+            <td style="text-align: center;">
+              <span data-bind="text: assignment.earnedPoints"></span>/<span data-bind="text: assignment.points"></span>
             </td>
-            <td>
+            <td style="text-align: end;">
               <span data-bind="text: assignment.percentage"></span>%
             </td>
           </tr>
         </tbody>
       </table>
+      <button data-bind="click: function () { forceRecompute.notifySub }">Update!</button>
     </div>
     
     <style>
