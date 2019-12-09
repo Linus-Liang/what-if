@@ -36,23 +36,27 @@
             <td><h5>Percentage</h5></td>
           </tr>
         </tbody>
-        <tbody data-bind="foreach: { data: assignmentView, as: 'assignment' }">
+        <tbody data-bind="foreach: { data: assignmentView, as: 'gradeEntry' }">
           <tr>
-            <td data-bind="text: assignment.categoryName"></td>
-            <td data-bind="text: assignment.name"></td>
+            <td data-bind="text: gradeEntry.categoryName"></td>
+            <td data-bind="text: gradeEntry.name"></td>
             <td style="text-align: center;">
-              <input data-bind="textInput: assignment.earnedScore"></input>/<span data-bind="text: assignment.maxScore"></span>
+              <div data-bind="with: $root.getGrade(gradeEntry.assignmentId)">
+                <input data-bind="textInput: grade">
+              </div>
+              /
+              <span data-bind="text: gradeEntry.maxScore"></span>
             </td>
             <td style="text-align: center;">
-              <span data-bind="text: assignment.earnedPoints"></span>/<span data-bind="text: assignment.points"></span>
+              <span data-bind="text: gradeEntry.earnedPoints"></span>/<span data-bind="text: gradeEntry.points"></span>
             </td>
             <td style="text-align: end;">
-              <span data-bind="text: assignment.percentage"></span>%
+              <span data-bind="text: gradeEntry.percentage"></span>%
             </td>
           </tr>
         </tbody>
       </table>
-      <button data-bind="click: function () { forceRecompute.notifySub }">Update!</button>
+      <button data-bind="click: update">Update!</button>
     </div>
     
     <style>
