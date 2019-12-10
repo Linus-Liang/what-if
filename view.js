@@ -1,7 +1,10 @@
 function Grade(g) {
     const self = this;
     self.assignmentId = g.assignmentId;
-    self.grade = ko.observable(g.grade);
+    
+    self.obserGrade = ko.observable(g.grade);
+    self.grade = self.obserGrade();
+    
     self.exempt = g.exempt;
     self.id = g.id;
     self.userId = g.userId;
@@ -34,20 +37,26 @@ function viewModel(categories, assignments, grades, scoreCodes) {
     self.grades = ko.observableArray([]);
     self.scoreCodes = ko.observableArray([]);
 
+    self.gradedAssignments = ko.observable();
+    self.assignmentView = ko.observable();
+
     self.update = function() {
-        
+        self.gradedAssignments(_gradingService.gradeAssignments(self.assignments(), self.grades().map(g => {
+            g.obserGrade.subscribe((newValue) => {
+                g.grade = newValue;
+                self.update();
+            });
+            g.obserGrade.extend({ rateLimit: { timeout: 500, method: 'notifyWhenChangesStop' } });
+            return g;
+        }), self.scoreCodes()));
+
+        self.assignmentView(self.assignments().map(a => {
+            const gradedAssignment = self.gradedAssignments().find(ga => a.id === ga.assignmentId);
+            const grade = self.grades().find(g => a.id === g.assignmentId);
+            const assignmentCategory = self.categories().find(c => c.id === a.categoryId);
+            return new GradeEntry(a, grade, gradedAssignment, assignmentCategory);
+        }));
     }
-    self.gradedAssignments = ko.pureComputed(() => _gradingService.gradeAssignments(self.assignments(), self.grades().map(g => {
-        g.grade.subscribe((a) => console.log(a, g));
-        g.grade = g.grade();
-        return g;
-    }), self.scoreCodes()));
-    self.assignmentView = ko.pureComputed(() => self.assignments().map(a => {
-        const gradedAssignment = self.gradedAssignments().find(ga => a.id === ga.assignmentId);
-        const grade = self.grades().find(g => a.id === g.assignmentId);
-        const assignmentCategory = self.categories().find(c => c.id === a.categoryId);
-        return new GradeEntry(a, grade, gradedAssignment, assignmentCategory);
-    }));
 
     self.getGrade = function (assignmentId) {
         return self.grades().find(g => g.assignmentId == assignmentId);
@@ -59,7 +68,7 @@ function viewModel(categories, assignments, grades, scoreCodes) {
         self.assignments(assignments);
         self.scoreCodes(scoreCodes);
         self.grades(grades.map(g => new Grade(g)));
-        update();
+        self.update();
     }
 
     this.init();
