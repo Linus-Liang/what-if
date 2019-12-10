@@ -15,7 +15,7 @@ class GradingService {
                 assignmentId: assignment.id,
                 userId: grade.userId,
                 extraCredit: assignment.extraCredit,
-                exempt: grade.exempt,
+                exempt: false,
             };
 
             const numericGrade = parseInt(grade.grade);
