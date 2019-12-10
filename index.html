@@ -42,7 +42,7 @@
             <td data-bind="text: gradeEntry.name"></td>
             <td style="text-align: center;">
               <div data-bind="with: $root.getGrade(gradeEntry.assignmentId)">
-                <input data-bind="textInput: obserGrade">
+                <input data-bind="textInput: grade">
               </div>
               /
               <span data-bind="text: gradeEntry.maxScore"></span>

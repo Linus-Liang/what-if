@@ -1,35 +1,32 @@
 function Grade(g) {
     const self = this;
     self.assignmentId = g.assignmentId;
-    
-    self.obserGrade = ko.observable(g.grade);
-    self.grade = self.obserGrade();
-    
+
+    self.grade = ko.observable(g.grade);
+    self.grade.extend({ rateLimit: { timeout: 500, method: 'notifyWhenChangesStop' } });
+
     self.exempt = g.exempt;
     self.id = g.id;
     self.userId = g.userId;
 }
 
-function GradeEntry(a, g, ga, c) {
+function AssignmentEntry(assignment, grade = {}, gradedAssignment = {}, category) {
     const self = this;
-    self.assignmentId = a.id;
-    self.name = a.name;
-    self.categoryName = c.name;
+    self.assignmentId = assignment.id;
+    self.name = assignment.name;
+    self.categoryName = category.name;
 
-    self.maxScore = a.maxScore;
-    self.points = a.points;
+    self.maxScore = assignment.maxScore;
+    self.points = assignment.points;
 
-    if (ga) {
-        self.earnedScore = g.grade;
-        self.earnedPoints = ga.earnedPoints;
-        self.percentage = ga.earnedPoints / ga.maxPoints * 100;
-    }
+    self.earnedScore = grade.grade || ' ';
+    self.earnedPoints = gradedAssignment.earnedPoints || ' ';
+    self.percentage = gradedAssignment.earnedPoints / gradedAssignment.maxPoints * 100 || ' ';
 }
-
 
 function viewModel(categories, assignments, grades, scoreCodes) {
     const self = this;
-    
+
     const _gradingService = new GradingService();
 
     self.categories = ko.observableArray([]);
@@ -40,21 +37,26 @@ function viewModel(categories, assignments, grades, scoreCodes) {
     self.gradedAssignments = ko.observable();
     self.assignmentView = ko.observable();
 
-    self.update = function() {
-        self.gradedAssignments(_gradingService.gradeAssignments(self.assignments(), self.grades().map(g => {
-            g.obserGrade.subscribe((newValue) => {
-                g.grade = newValue;
-                self.update();
-            });
-            g.obserGrade.extend({ rateLimit: { timeout: 500, method: 'notifyWhenChangesStop' } });
-            return g;
-        }), self.scoreCodes()));
+    self.autoCompute = ko.computed(() => {
+        for(self.grades()) {
+            
+        }
+    });
 
+    self.update = function() {
+        const grades = self.grades().map(g => {
+            return {
+                ...g,
+                grade: g.grade(),
+            }
+        });
+
+        self.gradedAssignments(_gradingService.gradeAssignments(self.assignments(), grades, self.scoreCodes()));
         self.assignmentView(self.assignments().map(a => {
             const gradedAssignment = self.gradedAssignments().find(ga => a.id === ga.assignmentId);
             const grade = self.grades().find(g => a.id === g.assignmentId);
             const assignmentCategory = self.categories().find(c => c.id === a.categoryId);
-            return new GradeEntry(a, grade, gradedAssignment, assignmentCategory);
+            return new AssignmentEntry(a, grade, gradedAssignment, assignmentCategory);
         }));
     }
 
