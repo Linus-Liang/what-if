@@ -81,7 +81,7 @@ class GradingService {
         return studentCollection;
     }
 
-    calculateStudentData(studentCategories) {
+    calculateStudentData(student, studentCategories) {
         const earnedAverage = studentCategories.sum(cat => cat.average * cat.weight);
         const totalWeight   = studentCategories.sum(cat => cat.maxPoints === 0 ? 0 : cat.weight);
         const percent       = earnedAverage / totalWeight;

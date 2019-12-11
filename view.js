@@ -54,6 +54,8 @@ function viewModel(student, categories, assignments, grades, scoreCodes) {
     self.gradedCategories = ko.observableArray();
     self.categoriesView = ko.observableArray();
 
+    self.overallGrade = ko.observable();
+
     self.update = function() {
         const grades = self.grades().map(g => {
             return {
@@ -75,6 +77,8 @@ function viewModel(student, categories, assignments, grades, scoreCodes) {
             const gradedCategory = self.gradedCategories().find(gc => gc.categoryId === c.id);
             return new CategoryEntry(c, gradedCategory);
         }));
+
+        self.overallGrade(_gradingService.calculateStudentData(student, self.gradedCategories()).percentage);
     }
 
     self.getGrade = function (assignmentId) {

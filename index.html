@@ -8,6 +8,10 @@
   </head>
   <body>
     <div id="tables">
+      <h1>
+        Overall: <span data-bind="text: overallGrade"></span>%
+      </h1>
+      
       <table>
         <tbody>
           <tr style="text-align: center;">
@@ -30,9 +34,7 @@
               /
               <span data-bind="text: categoryEntry.weight"></span>
             </td>
-            <td>
-              <span data-bind="text: categoryEntry.percentage"></span>%
-            </td>
+            <td><span data-bind="text: categoryEntry.percentage"></span>%</td>
           </tr>
         </tbody>
       </table>
@@ -62,9 +64,7 @@
             <td style="text-align: center;">
               <span data-bind="text: gradeEntry.earnedPoints"></span>/<span data-bind="text: gradeEntry.points"></span>
             </td>
-            <td style="text-align: end;">
-              <span data-bind="text: gradeEntry.percentage"></span>%
-            </td>
+            <td style="text-align: end;"><span data-bind="text: gradeEntry.percentage"></span>%</td>
           </tr>
         </tbody>
       </table>
