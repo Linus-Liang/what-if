@@ -8,23 +8,34 @@
   </head>
   <body>
     <div id="tables">
-      <!-- <table>
+      <table>
         <tbody>
-          <tr>
+          <tr style="text-align: center;">
             <td><h5>Category</h5></td>
-            <td></td>
+            <td><h5>Earned Points</h5></td>
+            <td><h5>Earned Weight</h5></td>
+            <td><h5>Percentage</h5></td>
           </tr>
         </tbody>
-        <tbody data-bind="foreach: { data: categoriesView, as: 'category' }">
+        <tbody data-bind="foreach: { data: categoriesView, as: 'categoryEntry' }">
           <tr>
-            <td data-bind="text: category.displayName"></td>
+            <td data-bind="text: categoryEntry.displayName"></td>
+            <td style="text-align: center;">
+              <span data-bind="text: categoryEntry.earnedPoints"></span>
+              /
+              <span data-bind="text: categoryEntry.maxPoints"></span>  
+            </td>
+            <td style="text-align: center;">
+              <span data-bind="text: categoryEntry.earnedWeight"></span>
+              /
+              <span data-bind="text: categoryEntry.weight"></span>
+            </td>
             <td>
-              <span data-bind="text: category.earnedWeight"></span>/
-              <span data-bind="text: category.weight"></span>
+              <span data-bind="text: categoryEntry.percentage"></span>%
             </td>
           </tr>
         </tbody>
-      </table> -->
+      </table>
 
       <table>
         <tbody>
@@ -41,10 +52,10 @@
             <td data-bind="text: gradeEntry.categoryName"></td>
             <td data-bind="text: gradeEntry.name"></td>
             <td style="text-align: center;">
-              <div data-bind="with: $root.getGrade(gradeEntry.assignmentId)">
+              <span data-bind="with: $root.getGrade(gradeEntry.assignmentId)">
                 <input data-bind="textInput: grade, visible: $root.isEditing">
                 <span data-bind="text: grade, visible: !$root.isEditing()"></span>
-              </div>
+              </span>
               /
               <span data-bind="text: gradeEntry.maxScore"></span>
             </td>

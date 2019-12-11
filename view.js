@@ -2,6 +2,8 @@ function Grade(g) {
     const self = this;
     self.assignmentId = g.assignmentId;
     self.grade = ko.observable(g.grade);
+
+    self.userId = g.userId;
 }
 
 function AssignmentEntry(assignment, score, gradedAssignment = {}, category) {
@@ -12,13 +14,32 @@ function AssignmentEntry(assignment, score, gradedAssignment = {}, category) {
 
     self.maxScore = assignment.maxScore;
     self.points = assignment.points;
+    
+    self.earnedScore = score || 100;
+    self.earnedPoints = gradedAssignment.earnedPoints;
+    self.percentage = gradedAssignment.earnedPoints / gradedAssignment.maxPoints * 100 || '';
 
-    self.earnedScore = score;
-    self.earnedPoints = gradedAssignment.earnedPoints || ' ';
-    self.percentage = gradedAssignment.earnedPoints / gradedAssignment.maxPoints * 100 || ' ';
+    ['earnedPoints', 'percentage'].forEach(prop => {
+        if (typeof(self[prop]) === 'number') {
+            self[prop] = self[prop].toFixed(2);
+        }
+    });
 }
 
-function viewModel(categories, assignments, grades, scoreCodes) {
+function CategoryEntry(category, gradedCategory) {
+    const self = this;
+
+    self.displayName = `${category.name} (${category.weight})`;
+    self.earnedPoints = gradedCategory.earnedPoints;
+    self.maxPoints = gradedCategory.maxPoints;
+    self.earnedWeight = gradedCategory.average * gradedCategory.weight;
+    self.weight = gradedCategory.weight;
+    self.percentage = gradedCategory.average * 100;
+
+    ['earnedWeight', 'weight', 'percentage'].forEach(prop => self[prop] = self[prop].toFixed(2));
+}
+
+function viewModel(student, categories, assignments, grades, scoreCodes) {
     const self = this;
 
     const _gradingService = new GradingService();
@@ -28,8 +49,10 @@ function viewModel(categories, assignments, grades, scoreCodes) {
     self.grades = ko.observableArray([]);
     self.scoreCodes = ko.observableArray([]);
 
-    self.gradedAssignments = ko.observable();
-    self.assignmentView = ko.observable();
+    self.gradedAssignments = ko.observableArray();
+    self.assignmentView = ko.observableArray();
+    self.gradedCategories = ko.observableArray();
+    self.categoriesView = ko.observableArray();
 
     self.update = function() {
         const grades = self.grades().map(g => {
@@ -42,9 +65,15 @@ function viewModel(categories, assignments, grades, scoreCodes) {
         self.gradedAssignments(_gradingService.gradeAssignments(self.assignments(), grades, self.scoreCodes()));
         self.assignmentView(self.assignments().map(a => {
             const gradedAssignment = self.gradedAssignments().find(ga => a.id === ga.assignmentId);
-            const grade = self.grades().find(g => a.id === g.assignmentId) || {};
+            let grade = self.grades().find(g => a.id === g.assignmentId) || {};
             const assignmentCategory = self.categories().find(c => c.id === a.categoryId);
             return new AssignmentEntry(a, ko.unwrap(grade.grade), gradedAssignment, assignmentCategory);
+        }));
+        
+        self.gradedCategories(_gradingService.averageStudents([student], self.categories(), self.gradedAssignments())[0].categories);
+        self.categoriesView(self.categories().map(c => {
+            const gradedCategory = self.gradedCategories().find(gc => gc.categoryId === c.id);
+            return new CategoryEntry(c, gradedCategory);
         }));
     }
 
@@ -71,6 +100,6 @@ function viewModel(categories, assignments, grades, scoreCodes) {
 
 
 
-const view = new viewModel(testData.categories, testData.assignments, testData.grades.filter(g => g.userId === 100), testData.scoreCodes);
+const view = new viewModel(testData.students[0], testData.categories, testData.assignments, testData.grades.filter(g => g.userId === 100), testData.scoreCodes);
 
 ko.applyBindings(view);
