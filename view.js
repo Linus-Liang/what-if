@@ -39,15 +39,16 @@ function CategoryEntry(category, gradedCategory) {
     ['earnedWeight', 'weight', 'percentage'].forEach(prop => self[prop] = self[prop].toFixed(2));
 }
 
-function viewModel(student, categories, assignments, grades, scoreCodes) {
+function viewModel() {
     const self = this;
 
     const _gradingService = new GradingService();
 
-    self.categories = ko.observableArray([]);
-    self.assignments = ko.observableArray([]);
-    self.grades = ko.observableArray([]);
-    self.scoreCodes = ko.observableArray([]);
+    self.student = ko.observable();
+    self.categories = ko.observableArray();
+    self.assignments = ko.observableArray();
+    self.grades = ko.observableArray();
+    self.scoreCodes = ko.observableArray();
 
     self.gradedAssignments = ko.observableArray();
     self.assignmentView = ko.observableArray();
@@ -72,13 +73,13 @@ function viewModel(student, categories, assignments, grades, scoreCodes) {
             return new AssignmentEntry(a, ko.unwrap(grade.grade), gradedAssignment, assignmentCategory);
         }));
         
-        self.gradedCategories(_gradingService.averageStudents([student], self.categories(), self.gradedAssignments())[0].categories);
+        self.gradedCategories(_gradingService.averageStudents([self.student()], self.categories(), self.gradedAssignments())[0].categories);
         self.categoriesView(self.categories().map(c => {
             const gradedCategory = self.gradedCategories().find(gc => gc.categoryId === c.id);
             return new CategoryEntry(c, gradedCategory);
         }));
 
-        self.overallGrade(_gradingService.calculateStudentData(student, self.gradedCategories()).percentage);
+        self.overallGrade(_gradingService.calculateStudentData(self.student(), self.gradedCategories()).percentage);
     }
 
     self.getGrade = function (assignmentId) {
@@ -91,19 +92,29 @@ function viewModel(student, categories, assignments, grades, scoreCodes) {
         self.isEditing(!self.isEditing());
     }
 
-    this.init = function () {
+    this.init = function (student, categories, assignments, grades, scoreCodes) {
+        self.student(student);
         self.categories(categories);
         self.assignments(assignments);
         self.scoreCodes(scoreCodes);
         self.grades(grades.map(g => new Grade(g)));
         self.update();
     }
-
-    this.init();
 }
 
+const view = new viewModel();
 
+async function loadData() {
+    const response = await fetch('gradeData.json');
+    const data = await response.json();
+    return data;
+}
 
-const view = new viewModel(testData.students[0], testData.categories, testData.assignments, testData.grades.filter(g => g.userId === 100), testData.scoreCodes);
+const data = loadData();
 
-ko.applyBindings(view);
+data = data.result[0];
+const student = data.students[0];
+view.init(student, data.categories, data.items, student.gradedEntries, )
+
+// const view = new viewModel(testData.students[0], testData.categories, testData.assignments, testData.grades.filter(g => g.userId === 100), testData.scoreCodes);
+// ko.applyBindings(view);
