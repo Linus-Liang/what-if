@@ -79,6 +79,8 @@ function viewModel() {
             return new CategoryEntry(c, gradedCategory);
         }));
 
+        console.log(_gradingService.calculateStudentData(self.student(), self.gradedCategories()));
+        
         self.overallGrade(_gradingService.calculateStudentData(self.student(), self.gradedCategories()).percentage);
     }
 
@@ -105,16 +107,45 @@ function viewModel() {
 const view = new viewModel();
 
 async function loadData() {
-    const response = await fetch('gradeData.json');
+    const response = await fetch('data.json');
     const data = await response.json();
+    
+    let selection = 0;
+    const selectedData = data.result[selection];
+
+    window.selectedData = selectedData;
+
+    const student = selectedData.students[0];
+    view.init(
+        { userId: student.id }, 
+        selectedData.categories.map(c => {
+            return { id: c.id, weight: c.weight, name: c.name }
+        }),
+        selectedData.items.map(i => {
+            return {
+                id: i.id,
+                categoryId: i.categoryId,
+                maxScore: i.maxScore,
+                extraCredit: i.isExtraCredit,
+                points: i.points,
+                name: i.name
+            }
+        }),
+        student.gradedEntries.map(g => {
+            return {
+                id: 0,
+                assignmentId: g.itemId,
+                userId: g.userId,
+                grade: g.rawScore
+            }
+        }),
+        selectedData.scoreCodes
+    )
+
     return data;
 }
 
 const data = loadData();
 
-data = data.result[0];
-const student = data.students[0];
-view.init(student, data.categories, data.items, student.gradedEntries, )
-
 // const view = new viewModel(testData.students[0], testData.categories, testData.assignments, testData.grades.filter(g => g.userId === 100), testData.scoreCodes);
-// ko.applyBindings(view);
+ko.applyBindings(view);

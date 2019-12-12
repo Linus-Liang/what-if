@@ -18,7 +18,7 @@ class GradingService {
                 exempt: false,
             };
 
-            const numericGrade = parseInt(grade.grade);
+            let numericGrade = parseInt(grade.grade);
             if (isNaN(numericGrade)) {
                 const scoreCode = scoreCodes.find(scoreCode => scoreCode.code === grade.grade);
                 if (scoreCode) {
