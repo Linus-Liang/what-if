@@ -16,13 +16,15 @@ class GradingService {
                 userId: grade.userId,
                 extraCredit: assignment.extraCredit,
                 exempt: false,
+                maxScore: assignment.maxScore,
+                maxPoints: assignment.points,
             };
 
             let numericGrade = parseInt(grade.grade);
             if (isNaN(numericGrade)) {
                 const scoreCode = scoreCodes.find(scoreCode => scoreCode.code === grade.grade);
                 if (scoreCode) {
-                    numericGrade = scoreCode.percent;
+                    numericGrade = scoreCode.percent / 100 * gradedAssignment.maxScore;
                     gradedAssignment.exempt = scoreCode.exempt;
                 } else {
                     this.unGraded.push(gradedAssignment);
@@ -31,25 +33,23 @@ class GradingService {
                 }
             }
 
+            gradedAssignment.earnedScore  = numericGrade;
+            gradedAssignment.grade        = gradedAssignment.earnedScore / gradedAssignment.maxScore;
+
+            gradedAssignment.earnedPoints = gradedAssignment.grade * gradedAssignment.maxPoints;
+
             if (assignment.maxScore === 0) {
                 this.unGraded.push(gradedAssignment);
                 console.warn('Ungraded assignment, cause: a maxScore of 0', gradedAssignment, assignment.name);
                 continue;
             }
 
-            if (gradedAssignment.maxPoints > 0 && gradedAssignment.maxScore > 0 && 
-                gradedAssignment.grade > 0     && gradedAssignment.earnedPoints> 0) {
+            if (gradedAssignment.maxPoints < 0 && gradedAssignment.maxScore     < 0 && 
+                gradedAssignment.grade     < 0 && gradedAssignment.earnedPoints < 0) {
                 this.unGraded.push(gradedAssignment);
                 console.warn('Ungraded assignment, cause: negative value(s)', gradedAssignment, assignment.name);
                 continue;
             }
-
-            gradedAssignment.earnedScore  = numericGrade;
-            gradedAssignment.maxScore     = assignment.maxScore;
-            gradedAssignment.grade        = gradedAssignment.earnedScore / gradedAssignment.maxScore;
-
-            gradedAssignment.maxPoints    = assignment.points;
-            gradedAssignment.earnedPoints = gradedAssignment.grade * gradedAssignment.maxPoints;
 
             gradedAssignments.push(gradedAssignment);
         }

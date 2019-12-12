@@ -17,7 +17,11 @@ function AssignmentEntry(assignment, score, gradedAssignment = {}, category) {
     
     self.earnedScore = score || 100;
     self.earnedPoints = gradedAssignment.earnedPoints;
-    self.percentage = gradedAssignment.earnedPoints / gradedAssignment.maxPoints * 100 || '';
+    self.percentage = gradedAssignment.earnedPoints / gradedAssignment.maxPoints * 100;
+
+    if(!self.percentage && !(self.percentage === 0)) {
+        self.percentage = '';
+    }
 
     ['earnedPoints', 'percentage'].forEach(prop => {
         if (typeof(self[prop]) === 'number') {
@@ -81,7 +85,7 @@ function viewModel() {
 
         console.log(_gradingService.calculateStudentData(self.student(), self.gradedCategories()));
         
-        self.overallGrade(_gradingService.calculateStudentData(self.student(), self.gradedCategories()).percentage);
+        self.overallGrade(_gradingService.calculateStudentData(self.student(), self.gradedCategories()).percentage.toFixed(2));
     }
 
     self.getGrade = function (assignmentId) {
