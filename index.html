@@ -40,7 +40,6 @@
         </tbody>
       </table>
 
-      <button data-bind="visible: isEditing, click: update">Update!</button>
       <button data-bind="text: btnEditText, click: toggleEditing"></button>
       
       <table>
@@ -56,21 +55,21 @@
         </tbody>
         <tbody data-bind="foreach: { data: assignmentView, as: 'gradeEntry' }">
           <tr>
-            <td data-bind="text: gradeEntry.categoryName"></td>
-            <td data-bind="text: gradeEntry.name"></td>
+            <td data-bind="text: categoryName"></td>
+            <td data-bind="text: name"></td>
             <td style="text-align: center;">
-              <!-- <span data-bind="with: $root.getGrade(gradeEntry.assignmentId)"> -->
-                <input data-bind="textInput: gradeEntry.earnedScore, visible: $root.isEditing">
-                <span data-bind="text: gradeEntry.earnedScore, visible: !$root.isEditing()"></span>
-              <!-- </span> -->
+              <input data-bind="textInput: earnedScore, visible: $root.isEditing">
+              <span data-bind="text: earnedScore, visible: !$root.isEditing()"></span>
               /
-              <span data-bind="text: gradeEntry.maxScore"></span>
+              <span data-bind="text: maxScore"></span>
             </td>
             <td style="text-align: center;">
-              <span data-bind="text: gradeEntry.earnedPoints"></span>/<span data-bind="text: gradeEntry.points"></span>
+              <span data-bind="text: earnedPoints"></span>/<span data-bind="text: points"></span>
             </td>
-            <td style="text-align: end;"><span data-bind="text: gradeEntry.percentage"></span>%</td>
-            <td data-bind="text: letterGrade.letterGrade"></td>
+            <td style="text-align: end;"><span data-bind="text: percentage"></span>%</td>
+            <!-- ko using: gradeEntry.letterGrade -->
+              <td data-bind="text: letterGrade"></td>
+            <!-- /ko -->
           </tr>
         </tbody>
       </table>
@@ -85,15 +84,20 @@
       }
     </style>
 
-    <!-- <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script> -->
+    <!-- <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
-    <!-- <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script> -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script> -->
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.5.0/knockout-min.js"></script>
 
     <script src="utils.js"></script>
+    
     <script src="grader.js"></script>
-    <script src="test.js"></script>
+
+    <script src="AssignmentEntry.js"></script>
+    <script src="CategoryEntry.js"></script>
+    <script src="ViewModel.js"></script>
+
     <script src="view.js"></script>
   </body>
 </html>

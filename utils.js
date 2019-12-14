@@ -20,14 +20,3 @@ Object.prototype.map = function (func) {
     }
     return collection;
 }
-
-function getLetterGrade(schema, number) {
-    const ranges = schema.ranges;
-    for (const range of ranges) {
-        if (number >= range.minGrade) {
-            return range;
-        }
-    }
-} 
-
-// getLetterGrade(10, schema).letterGrade === "A";
