@@ -1,36 +1,39 @@
 const view = new ViewModel();
 
-function applyData(data) {
-    let selection = 0;
-    const selectedData = data.result[selection];
+function reformatData(data, sectionSelection) {
+    const selectedData = data.result[sectionSelection];
 
     const student = selectedData.students[0];
-    view.init(
-        { userId: student.id }, 
-        selectedData.categories.map(c => {
-            return { id: c.id, weight: c.weight, name: c.name }
-        }),
-        selectedData.items.map(i => {
-            return {
-                id: i.id,
-                categoryId: i.categoryId,
-                maxScore: i.maxScore,
-                extraCredit: i.isExtraCredit,
-                points: i.points,
-                name: i.name
-            }
-        }),
-        student.gradedEntries.map(g => {
-            return {
-                id: 0,
-                assignmentId: g.itemId,
-                userId: g.userId,
-                grade: g.rawScore
-            }
-        }),
-        selectedData.scoreCodes
-    );
 
+    const categories = selectedData.categories.map(c => {
+        return { id: c.id, weight: c.weight, name: c.name }
+    });
+    const assignments = selectedData.items.map(i => {
+        return {
+            id: i.id,
+            categoryId: i.categoryId,
+            maxScore: i.maxScore,
+            extraCredit: i.isExtraCredit,
+            points: i.points,
+            name: i.name
+        }
+    });
+    const grades = student.gradedEntries.map(g => {
+        return {
+            id: 0,
+            assignmentId: g.itemId,
+            userId: g.userId,
+            grade: g.rawScore
+        }
+    });
+    const scoreCodes = selectedData.scoreCodes;
+
+    return [{ userId: student.id }, categories, assignments, grades, scoreCodes];
+}
+
+function applyData(data) {
+    view.init.apply(null, reformatData(data, 0));
+    // view.init(data.students[0], data.categories, data.assignments, data.grades, data.scoreCodes)
     ko.applyBindings(view, document.querySelector('#tables'));
 }
 
@@ -41,4 +44,5 @@ async function loadServerData(url) {
     return data;
 }
 
-loadServerData('data.json').then(applyData);
+// loadServerData('data.json').then(applyData);
+loadServerData('test.json').then(applyData);

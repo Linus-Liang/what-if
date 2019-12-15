@@ -1,12 +1,11 @@
-function CategoryEntry(category, gradedCategory) {
+function CategoryEntry(category, gradedCategory, letterGrade) {
   const self = this;
 
   self.displayName = `${category.name} (${category.weight})`;
-  self.earnedPoints = gradedCategory.earnedPoints;
+  self.earnedPoints = (gradedCategory.earnedPoints).toFixed(2);
   self.maxPoints = gradedCategory.maxPoints;
-  self.earnedWeight = gradedCategory.average * gradedCategory.weight;
-  self.weight = gradedCategory.weight;
-  self.percentage = gradedCategory.average * 100;
-
-  ['earnedWeight', 'weight', 'percentage', 'earnedPoints'].forEach(prop => self[prop] = self[prop].toFixed(2));
+  self.earnedWeight = (gradedCategory.average * gradedCategory.weight).toFixed(2);
+  self.weight = gradedCategory.weight.toFixed(2);
+  self.percentage = gradedCategory.percentage.toFixed(2);
+  self.letterGrade = letterGrade;
 }

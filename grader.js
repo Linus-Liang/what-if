@@ -3,6 +3,7 @@ class GradingService {
         // grades that cannot be calculated for: having an invaild grade, or having a max score of 0
         this.unGraded = [];
         this.schemas = {
+            default: { letterGrade: '' },
             letter: {
                 name: '',
                 ranges: [
@@ -53,6 +54,7 @@ class GradingService {
         gradedAssignment.grade        = gradedAssignment.earnedScore / gradedAssignment.maxScore;
 
         gradedAssignment.earnedPoints = gradedAssignment.grade * gradedAssignment.maxPoints;
+        gradedAssignment.percentage = gradedAssignment.grade * 100;
 
         if (assignment.maxScore === 0) {
             this.unGraded.push(gradedAssignment);
@@ -60,7 +62,7 @@ class GradingService {
             return;
         }
 
-        if (gradedAssignment.maxPoints < 0 && gradedAssignment.maxScore     < 0 && 
+        if (gradedAssignment.maxPoints < 0 && gradedAssignment.maxScore     < 0 &&
             gradedAssignment.grade     < 0 && gradedAssignment.earnedPoints < 0) {
             this.unGraded.push(gradedAssignment);
             console.warn('Ungraded assignment, cause: negative value(s)', gradedAssignment, assignment.name);
@@ -70,10 +72,10 @@ class GradingService {
         return gradedAssignment;
     }
 
-    // 
+    //
     gradeAssignments(assignments, grades, scoreCodes) {
         const gradedAssignments = [];
-        for (const grade of grades) {            
+        for (const grade of grades) {
             const assignment = assignments.find(item => item.id === grade.assignmentId);
             const gradedAssignment = this.gradeAssignment(assignment, grade, scoreCodes);
             if (gradedAssignment) {
@@ -90,14 +92,16 @@ class GradingService {
             const gradedCategories = categories.map(category => {
                 const assignments  = grades.filter(g => g.categoryId === category.id);
                 const earnedPoints = assignments.isEmpty() ? 0 : assignments.sum(a => a.exempt ? 0 : a.earnedPoints);
-                const maxPoints    = assignments.isEmpty() ? 0 : assignments.sum(a => a.extraCredit || a.exempt ? 0 : a.maxPoints);                
+                const maxPoints    = assignments.isEmpty() ? 0 : assignments.sum(a => a.extraCredit || a.exempt ? 0 : a.maxPoints);
+                const average = maxPoints !== 0 ? earnedPoints / maxPoints : 0;
                 return {
                     userId: student.userId,
                     categoryId: category.id,
                     weight: category.weight,
                     earnedPoints: earnedPoints,
                     maxPoints: maxPoints,
-                    average: maxPoints !== 0 ? earnedPoints / maxPoints : 0,
+                    average: average,
+                    percentage: average * 100,
                 };
             });
             studentCollection.push({

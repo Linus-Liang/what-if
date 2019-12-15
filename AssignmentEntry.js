@@ -13,19 +13,18 @@ function AssignmentEntry(assignment, gradedAssignment = {}, letterGrade, categor
     self.percentage = ko.observable();
     self.letterGrade = ko.observable();
 
-    self.update = function(gradedAssignment = {}, letterGrade) {
-        
+    self.update = function(gradedAssignment = {}, letterGrade) {        
         const earnedScore = gradedAssignment.earnedScore;
         const earnedPoints = gradedAssignment.earnedPoints;
         const percentage = gradedAssignment.earnedPoints / gradedAssignment.maxPoints * 100;
 
-        self.earnedScore(earnedScore ? earnedScore.toFixed(0) : '');
-        self.earnedPoints(earnedPoints ? earnedPoints.toFixed(2) : '');
+        // When gradedAssignment is undefined (that happends when no grade is given to an assignment),
+        // then there should be blank fields, so set the properties to blank strings
+        self.earnedScore(earnedScore || earnedScore === 0 ? earnedScore.toFixed(0) : '');
+        self.earnedPoints(earnedPoints || earnedPoints === 0 ? earnedPoints.toFixed(2) : '');
         self.percentage(percentage ? percentage.toFixed(1) : '');
         
         self.letterGrade(letterGrade);
-
-        // manyApply((val) => val(val().tofixed(2)), self.earnedScore)
     }
 
     self.update(gradedAssignment, letterGrade);

@@ -20,6 +20,7 @@
             <td><h5>Earned Points</h5></td>
             <td><h5>Earned Weight</h5></td>
             <td><h5>Percentage</h5></td>
+            <td><h5>Letter Grade</h5></td>
           </tr>
         </tbody>
         <tbody data-bind="foreach: { data: categoriesView, as: 'categoryEntry' }">
@@ -36,6 +37,9 @@
               <span data-bind="text: categoryEntry.weight"></span>
             </td>
             <td><span data-bind="text: categoryEntry.percentage"></span>%</td>
+            <!-- ko using: categoryEntry.letterGrade -->
+              <td data-bind="text: letterGrade"></td>
+            <!-- /ko -->
           </tr>
         </tbody>
       </table>
