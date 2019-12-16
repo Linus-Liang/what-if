@@ -1,4 +1,4 @@
-function AssignmentEntry(assignment, gradedAssignment = {}, letterGrade, category) {
+function AssignmentEntry(assignment, gradedAssignment = {}, category) {
     const self = this;
     
     self.assignmentId = assignment.id;
@@ -13,7 +13,7 @@ function AssignmentEntry(assignment, gradedAssignment = {}, letterGrade, categor
     self.percentage = ko.observable();
     self.letterGrade = ko.observable();
 
-    self.update = function(gradedAssignment = {}, letterGrade) {        
+    self.update = function(gradedAssignment = {}) {        
         const earnedScore = gradedAssignment.earnedScore;
         const earnedPoints = gradedAssignment.earnedPoints;
         const percentage = gradedAssignment.earnedPoints / gradedAssignment.maxPoints * 100;
@@ -24,8 +24,8 @@ function AssignmentEntry(assignment, gradedAssignment = {}, letterGrade, categor
         self.earnedPoints(earnedPoints || earnedPoints === 0 ? earnedPoints.toFixed(2) : '');
         self.percentage(percentage ? percentage.toFixed(1) : '');
         
-        self.letterGrade(letterGrade);
+        self.letterGrade(gradedAssignment.letterGrade);
     }
 
-    self.update(gradedAssignment, letterGrade);
+    self.update(gradedAssignment);
 }

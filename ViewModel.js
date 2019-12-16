@@ -25,19 +25,26 @@ function ViewModel() {
 
     self.overallGrade = ko.observable();
 
-    self.update = function(assignmentEntry) {
+    self.updateAssignmentEntry = function(assignmentEntry) {
         const grade = self.grades().find(g => g.assignmentId === assignmentEntry.assignmentId);
+        const assignment = self.assignments().find(a => a.id === grade.assignmentId);
+        
         grade.grade = assignmentEntry.earnedScore(); // Update the score of the grade so it can be graded properly by the grader service
 
-        const assignment = self.assignments().find(a => a.id === grade.assignmentId);
 
-        const currentGradedAssignments = self.gradedAssignments().find(ga => ga.assignmentId === assignmentEntry.assignmentId); 
+        let currentGradedAssignment = self.gradedAssignments().find(ga => ga.assignmentId === assignmentEntry.assignmentId); 
         const newGradedAssignment = _gradingService.gradeAssignment(assignment, grade, self.scoreCodes());
-        Object.assign(currentGradedAssignments, newGradedAssignment); // Update the properties of the old assignment with the new recalculated assignment
+        // if (newGradedAssignment) {
+            // currentGradedAssignment = {...newGradedAssignment}
+        Object.assign(currentGradedAssignment, newGradedAssignment); // Update the properties of the old assignment with the new recalculated assignment
+        // } else {
+        //     for (const key of Object.keys(currentGradedAssignment)) {
+        //         if (key == )
+        //         currentGradedAssignment[key] = undefined;
+        //     } // When 
+        // }
 
-        const letterGrade = self.getLetterGrade(newGradedAssignment ? newGradedAssignment.percentage : undefined); 
-        
-        assignmentEntry.update(newGradedAssignment, letterGrade);
+        assignmentEntry.update(currentGradedAssignment);
         self.assignmentView.notifySubscribers(); // Update the UI
         
         self.updateSummery();
@@ -53,22 +60,13 @@ function ViewModel() {
 
         self.categoriesView(self.categories().map(c => {
             const gradedCategory = self.gradedCategories().find(gc => gc.categoryId === c.id);
-            const letterGrade = self.getLetterGrade(gradedCategory.percentage);
-            return new CategoryEntry(c, gradedCategory, letterGrade);
+            return new CategoryEntry(c, gradedCategory);
         }));
 
         self.overallGrade(_gradingService.calculateStudentData(
             self.student(),
             self.gradedCategories()
         ).percentage.toFixed(2));
-    }
-
-    self.getLetterGrade = function (number) {
-        if(number) {
-            return _gradingService.getLetterGrade(_gradingService.schemas['letter'], number);
-        }
-        // When their no number given (ex. no score was given to an assignment), don't calculate a grade
-        return _gradingService.schemas['default'];
     }
 
     self.isEditing = ko.observable(false);
@@ -82,17 +80,12 @@ function ViewModel() {
         self.categories(categories);
         self.assignments(assignments);
         self.scoreCodes(scoreCodes);
-                
+
         const newGrades = assignments.map(a => {
             /* This is done so assignments without a grade, can be edited */
             const grade = grades.find(g => g.assignmentId == a.id);
             if(!grade) {
-                const fillingGrade = new Grade({ assignmentId: a.id, userId: student.userId }, 0);
-                return fillingGrade;
-                // const fillingGraded = _gradingService.gradeAssignment(a, fillingGrade, self.scoreCodes());
-                // // Setting these properties to empty strings makes them appear blank on the UI
-                // fillingGraded.earnedScore = '';
-                // fillingGraded.earnedPoints = '';
+                return new Grade({ assignmentId: a.id, userId: student.userId }, 0);
             }
             return new Grade(grade, grade.grade);
         });
@@ -111,12 +104,11 @@ function ViewModel() {
 
             const gradedAssignment = self.gradedAssignments().find(ga => a.id === ga.assignmentId);
             const assignmentCategory = self.categories().find(c => c.id === a.categoryId);
-            const letterGrade = self.getLetterGrade(gradedAssignment ? gradedAssignment.percentage : undefined);
-            return new AssignmentEntry(a, gradedAssignment, letterGrade, assignmentCategory);
+            return new AssignmentEntry(a, gradedAssignment, assignmentCategory);
         }));
 
         for (const assignmentEntry of self.assignmentView()) {            
-            assignmentEntry.earnedScore.subscribe(() => self.update(assignmentEntry));
+            assignmentEntry.earnedScore.subscribe(() => self.updateAssignmentEntry(assignmentEntry));
             assignmentEntry.earnedScore.extend({ rateLimit: { timeout: 300, method: 'notifyWhenChangesStop' } });
         }
 

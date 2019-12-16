@@ -54,7 +54,7 @@ class GradingService {
         gradedAssignment.grade        = gradedAssignment.earnedScore / gradedAssignment.maxScore;
 
         gradedAssignment.earnedPoints = gradedAssignment.grade * gradedAssignment.maxPoints;
-        gradedAssignment.percentage = gradedAssignment.grade * 100; 
+        gradedAssignment.percentage = gradedAssignment.grade * 100;
 
         if (assignment.maxScore === 0) {
             this.unGraded.push(gradedAssignment);
