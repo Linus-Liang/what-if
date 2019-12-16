@@ -82,7 +82,23 @@ function ViewModel() {
         self.categories(categories);
         self.assignments(assignments);
         self.scoreCodes(scoreCodes);
-        self.grades(grades.map(g => new Grade(g, g.grade)));
+                
+        const newGrades = assignments.map(a => {
+            /* This is done so assignments without a grade, can be edited */
+            const grade = grades.find(g => g.assignmentId == a.id);
+            if(!grade) {
+                const fillingGrade = new Grade({ assignmentId: a.id, userId: student.userId }, 0);
+                return fillingGrade;
+                // const fillingGraded = _gradingService.gradeAssignment(a, fillingGrade, self.scoreCodes());
+                // // Setting these properties to empty strings makes them appear blank on the UI
+                // fillingGraded.earnedScore = '';
+                // fillingGraded.earnedPoints = '';
+            }
+            return new Grade(grade, grade.grade);
+        });
+        
+        
+        self.grades(newGrades);
 
         self.gradedAssignments(_gradingService.gradeAssignments(
             self.assignments(),
@@ -91,20 +107,8 @@ function ViewModel() {
         ));
 
         self.assignmentView(self.assignments().map(a => {
-            /* This is done so assignments without a grade, can be edited */
-            const grade = self.grades().find(g => g.assignmentId === a.id);
-            if(!grade) {
-                const fillingGrade = new Grade({ assignmentId: a.id, userId: a.userId }, 0);
-                self.grades.push(fillingGrade);
-
-                const fillingGraded = _gradingService.gradeAssignment(a, fillingGrade, self.scoreCodes());
-                // Setting these properties to empty strings makes them appear blank on the UI
-                fillingGraded.earnedScore = '';
-                fillingGraded.earnedPoints = '';
-                self.gradedAssignments.push(fillingGraded);
-            }
-
             /* Creating the AssignmentView */
+
             const gradedAssignment = self.gradedAssignments().find(ga => a.id === ga.assignmentId);
             const assignmentCategory = self.categories().find(c => c.id === a.categoryId);
             const letterGrade = self.getLetterGrade(gradedAssignment ? gradedAssignment.percentage : undefined);

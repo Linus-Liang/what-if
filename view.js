@@ -43,4 +43,4 @@ async function loadServerData(url) {
     return data;
 }
 
-loadServerData('test.json').then(applyData);
+loadServerData('data.json').then(applyData);

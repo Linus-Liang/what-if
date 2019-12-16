@@ -54,7 +54,7 @@ class GradingService {
         gradedAssignment.grade        = gradedAssignment.earnedScore / gradedAssignment.maxScore;
 
         gradedAssignment.earnedPoints = gradedAssignment.grade * gradedAssignment.maxPoints;
-        gradedAssignment.percentage = gradedAssignment.grade * 100;
+        gradedAssignment.percentage = gradedAssignment.grade * 100; 
 
         if (assignment.maxScore === 0) {
             this.unGraded.push(gradedAssignment);
@@ -91,8 +91,8 @@ class GradingService {
             const grades           = gradedAssignments.filter(g => g.userId === student.userId);
             const gradedCategories = categories.map(category => {
                 const assignments  = grades.filter(g => g.categoryId === category.id);
-                const earnedPoints = assignments.isEmpty() ? 0 : assignments.sum(a => a.exempt ? 0 : a.earnedPoints);
-                const maxPoints    = assignments.isEmpty() ? 0 : assignments.sum(a => a.extraCredit || a.exempt ? 0 : a.maxPoints);
+                const earnedPoints = Util.isEmpty(assignments) ? 0 : Util.sum(assignments, a => a.exempt ? 0 : a.earnedPoints);
+                const maxPoints    = Util.isEmpty(assignments) ? 0 : Util.sum(assignments, a => a.extraCredit || a.exempt ? 0 : a.maxPoints);
                 const average = maxPoints !== 0 ? earnedPoints / maxPoints : 0;
                 return {
                     userId: student.userId,
@@ -113,8 +113,8 @@ class GradingService {
     }
 
     calculateStudentData(student, studentCategories) {
-        const earnedAverage = studentCategories.sum(cat => cat.average * cat.weight);
-        const totalWeight   = studentCategories.sum(cat => cat.maxPoints === 0 ? 0 : cat.weight);
+        const earnedAverage = Util.sum(studentCategories, cat => cat.average * cat.weight);
+        const totalWeight   = Util.sum(studentCategories, cat => cat.maxPoints === 0 ? 0 : cat.weight);
         const percent       = earnedAverage / totalWeight;
 
         const studentInfo = {
