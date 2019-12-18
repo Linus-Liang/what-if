@@ -33,7 +33,6 @@ function reformatData(data, sectionSelection) {
 
 function applyData(data) {
     view.init.apply(null, reformatData(data, 0));
-    ko.applyBindings(view, document.querySelector('#tables'));
 }
 
 async function loadServerData(url) {
@@ -44,3 +43,5 @@ async function loadServerData(url) {
 }
 
 loadServerData('data.json').then(applyData);
+
+ko.applyBindings(view, document.querySelector('#tables'));

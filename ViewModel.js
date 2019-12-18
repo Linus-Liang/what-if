@@ -1,7 +1,8 @@
-function Grade(grade, score) {
+// assignmentId, userId, score
+function Grade(grade) {
     const self = this;
     self.assignmentId = grade.assignmentId;
-    self.grade = score;
+    self.grade = grade.grade;
     self.userId = grade.userId;
 }
 
@@ -34,16 +35,8 @@ function ViewModel() {
 
         let currentGradedAssignment = self.gradedAssignments().find(ga => ga.assignmentId === this.assignmentId); 
         const newGradedAssignment = _gradingService.gradeAssignment(assignment, grade, self.scoreCodes());
-        if (newGradedAssignment) {
-            Object.assign(currentGradedAssignment, newGradedAssignment); // Update the properties of the old assignment with the new recalculated assignment
-        } else {
-            for (const key of Object.keys(currentGradedAssignment)) {
-                if (key == 'assignmentId') {
-                    continue;
-                }
-                currentGradedAssignment[key] = '';
-            } // When 
-        }
+
+        Object.assign(currentGradedAssignment, newGradedAssignment); // Update the properties of the old assignment with the new recalculated assignment
 
         this.update(currentGradedAssignment);
         self.assignmentView.notifySubscribers(); // Update the UI
@@ -59,20 +52,19 @@ function ViewModel() {
             self.gradedAssignments()
         )[0].categories);
 
-        self.categoriesView(self.categories().map(c => {
-            const gradedCategory = self.gradedCategories().find(gc => gc.categoryId === c.id);
-            return new CategoryEntry(c, gradedCategory);
-        }));
+        self.categoriesView(self.gradedCategories().map(gradedCategory => new CategoryEntry(gradedCategory)));
 
-        self.overallGrade(_gradingService.calculateStudentData(
+        const overall = _gradingService.calculateStudentData(
             self.student(),
             self.gradedCategories()
-        ).percentage.toFixed(2));
+        ).percentage.toFixed(2);
+        
+        self.overallGrade(overall);
     }
 
     self.isEditing = ko.observable(false);
     self.btnEditText = ko.pureComputed(() => self.isEditing() ? 'Stop Editing' : 'Start Editing');
-    self.toggleEditing = function () {
+    self.toggleEditing = () => {
         self.isEditing(!self.isEditing());
     }
 
@@ -82,14 +74,10 @@ function ViewModel() {
         self.assignments(assignments);
         self.scoreCodes(scoreCodes);
 
-        const newGrades = assignments.map(a => {
+        const newGrades = assignments.map(assignment => {
             /* This is done so assignments without a grade, can be edited */
-            const grade = grades.find(g => g.assignmentId == a.id);
-            if(!grade) {
-                return new Grade({ assignmentId: a.id, userId: student.userId }, '');
-            }
-            // Regular: assignments with a grade
-            return new Grade(grade, grade.grade);
+            const grade = grades.find(g => g.assignmentId == assignment.id);
+            return new Grade(grade || { assignmentId: assignment.id, userId: student.userId, gradel: '' });
         });
         self.grades(newGrades);
 
@@ -98,23 +86,16 @@ function ViewModel() {
             self.grades(),
             self.scoreCodes()
         ));
-        for(const grade of self.grades()) {
-            /* When their is no grade for an assignment, the grader refuses to grade is, */
-            const possibleGradedAssignment = self.gradedAssignments().find(ga => ga.assignmentId === grade.assignmentId);
-            if(!possibleGradedAssignment) {
-                self.gradedAssignments.push({});
-            }
-        }
 
-        self.assignmentView(self.assignments().map(a => {
-            /* Creating the AssignmentView */
-
-            const gradedAssignment = self.gradedAssignments().find(ga => a.id === ga.assignmentId);
-            const assignmentCategory = self.categories().find(c => c.id === a.categoryId);
-            return new AssignmentEntry(a, gradedAssignment, assignmentCategory);
+        self.assignmentView(self.assignments().map(assignment => {
+            /* Creating the AssignmentView from the gradedAssignments */
+            const gradedAssignment = self.gradedAssignments().find(ga => assignment.id === ga.assignmentId);
+            const assignmentCategory = self.categories().find(c => c.id === assignment.categoryId);
+            return new AssignmentEntry(assignment, gradedAssignment, assignmentCategory);
         }));
 
-        for (const assignmentEntry of self.assignmentView()) {            
+        //is it possible to remove this?
+        for (const assignmentEntry of self.assignmentView()) {
             assignmentEntry.earnedScore.subscribe(self.updateAssignmentEntry, assignmentEntry);
             assignmentEntry.earnedScore.extend({ rateLimit: { timeout: 300, method: 'notifyWhenChangesStop' } });
         }

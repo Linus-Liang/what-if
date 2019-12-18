@@ -24,14 +24,14 @@ class GradingService {
         }
     }
 
-    gradeAssignment(assignment, grade, scoreCodes, ignoreWarnings) {
+    gradeAssignment(assignment, grade, scoreCodes) {
         // gradeAssignments takes in 2 arrays and returns an array; structuring into array then destructuring
         const [graded] = this.gradeAssignments([assignment], [grade], scoreCodes);
         return graded;
     }
 
     //
-    gradeAssignments(assignments, grades, scoreCodes, ignoreWarnings) {
+    gradeAssignments(assignments, grades, scoreCodes) {
         const gradedAssignments = [];
         for (const grade of grades) {
             const assignment = assignments.find(item => item.id === grade.assignmentId);
@@ -45,6 +45,12 @@ class GradingService {
                 exempt: false,
                 maxScore: assignment.maxScore,
                 maxPoints: assignment.points,
+                isGraded: true,
+                earnedScore: NaN,
+                grade: NaN,
+                earnedPoints: NaN,
+                percentage: NaN,
+                letterGrade: undefined,
             };
     
             let numericGrade = parseInt(grade.grade);
@@ -54,8 +60,8 @@ class GradingService {
                     numericGrade = scoreCode.percent / 100 * gradedAssignment.maxScore;
                     gradedAssignment.exempt = scoreCode.exempt;
                 } else {
-                    console.warn('Ungraded assignment, cause: scoreCode does not exist or grade is not a number', gradedAssignment, assignment.name, 'grade:', numericGrade);
-                    continue;
+                    console.warn('Ungraded assignment, cause: scoreCode does not exist or grade is not a number', gradedAssignment, assignment.name);
+                    gradedAssignment.isGraded = false;
                 }
             }
     
@@ -69,13 +75,13 @@ class GradingService {
     
             if (assignment.maxScore === 0) {
                 console.warn('Ungraded assignment, cause: a maxScore of 0', gradedAssignment, assignment.name);
-                continue;
+                gradedAssignment.isGraded = false;
             }
     
             if (gradedAssignment.maxPoints < 0 && gradedAssignment.maxScore     < 0 &&
                 gradedAssignment.grade     < 0 && gradedAssignment.earnedPoints < 0) {
                 console.warn('Ungraded assignment, cause: negative value(s)', gradedAssignment, assignment.name);
-                continue;
+                gradedAssignment.isGraded = false;
             }
 
             gradedAssignments.push(gradedAssignment);
@@ -88,18 +94,19 @@ class GradingService {
         for (const student of students) {
             const grades           = gradedAssignments.filter(g => g.userId === student.userId);
             const gradedCategories = categories.map(category => {
-                const assignments  = grades.filter(g => g.categoryId === category.id);
-                const earnedPoints = Util.isEmpty(assignments) ? 0 : Util.sum(assignments, a => a.exempt ? 0 : a.earnedPoints);
-                const maxPoints    = Util.isEmpty(assignments) ? 0 : Util.sum(assignments, a => a.extraCredit || a.exempt ? 0 : a.maxPoints);
+                const assignments  = grades.filter(g => (g.categoryId === category.id) && g.isGraded);
+                const earnedPoints = Util.sum(assignments, a => a.exempt ? 0 : a.earnedPoints);
+                const maxPoints    = Util.sum(assignments, a => a.extraCredit || a.exempt ? 0 : a.maxPoints);
                 const average = maxPoints !== 0 ? earnedPoints / maxPoints : 0;
+                const percentage = average * 100;
                 return {
+                    ...category,
                     userId: student.userId,
-                    categoryId: category.id,
-                    weight: category.weight,
                     earnedPoints: earnedPoints,
                     maxPoints: maxPoints,
                     average: average,
-                    percentage: average * 100,
+                    percentage: percentage,
+                    letterGrade: this.getLetterGrade(this.schema, percentage),
                 };
             });
             studentCollection.push({
