@@ -20,7 +20,6 @@ function reformatData(data, sectionSelection) {
     });
     const grades = student.gradedEntries.map(g => {
         return {
-            id: 0,
             assignmentId: g.itemId,
             userId: g.userId,
             grade: g.rawScore

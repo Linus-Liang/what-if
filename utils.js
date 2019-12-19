@@ -11,4 +11,14 @@ const Util = {
     },
 }
 
-Util.sum(null)
+ko.bindingHandlers.percent = {
+    update: function (element, valueAccessor, allBindings) {
+        const numberValue = ko.utils.unwrapObservable(valueAccessor());
+        if (!numberValue) {
+            return;
+        }
+        
+        const text = numberValue.toFixed(allBindings.get('fracDigits') || 0);
+        ko.bindingHandlers.text.update(element, () => text);
+    }
+}
