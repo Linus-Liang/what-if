@@ -10,7 +10,7 @@
   <body>
     <div id="tables">
       <h1>
-        Overall: <span data-bind="percent: overallGrade, fracDigits: 2"></span>%
+        Overall: <span data-bind="fixed: overallGrade, digits: 2, percent: true"></span>
       </h1>
       
       <table>
@@ -27,16 +27,16 @@
           <tr>
             <td data-bind="text: categoryEntry.displayName"></td>
             <td style="text-align: center;">
-              <span data-bind="percent: categoryEntry.earnedPoints, fracDigits: 2"></span>
+              <span data-bind="fixed: categoryEntry.earnedPoints, digits: 2"></span>
               /
               <span data-bind="text: categoryEntry.maxPoints"></span>  
             </td>
             <td style="text-align: center;">
-              <span data-bind="percent: categoryEntry.earnedWeight, fracDigits: 2"></span>
+              <span data-bind="fixed: categoryEntry.earnedWeight, digits: 2"></span>
               /
-              <span data-bind="percent: categoryEntry.weight"></span>
+              <span data-bind="fixed: categoryEntry.weight"></span>
             </td>
-            <td><span data-bind="percent: categoryEntry.percentage"></span>%</td>
+            <td data-bind="fixed: categoryEntry.percentage, percent: true"></td>
             <td data-bind="with: letterGrade">
               <span data-bind="text: letterGrade"></span>
             </td>
@@ -63,12 +63,12 @@
             <td data-bind="text: name"></td>
             <td style="text-align: center;">
               <input data-bind="textInput: earnedScore, visible: $root.isEditing">
-              <span data-bind="percent: percentage, fracDigits: 2, visible: !$root.isEditing()"></span>/<span data-bind="text: maxScore"></span>
+              <span data-bind="fixed: percentage, digits: 2, visible: !$root.isEditing()"></span>/<span data-bind="text: maxScore"></span>
             </td>
             <td style="text-align: center;">
-              <span data-bind="percent: earnedPoints, fracDigits: 2"></span>/<span data-bind="percent: points"></span>
+              <span data-bind="fixed: earnedPoints, digits: 2"></span>/<span data-bind="fixed: points"></span>
             </td>
-            <td style="text-align: end;"><span data-bind="percent: percentage, fracDigits: 2"></span>%</td>
+            <td style="text-align: end;" data-bind="fixed: percentage, digits: 2, percent: true"></td>
             <td data-bind="with: letterGrade">
               <span data-bind="text: letterGrade"></span>
             </td>

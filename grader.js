@@ -92,12 +92,12 @@ class GradingService {
     averageStudents(students, categories, gradedAssignments) {
         const studentCollection = [];
         for (const student of students) {
-            const grades           = gradedAssignments.filter(g => g.userId === student.userId);
+            const grades = gradedAssignments.filter(g => g.userId === student.userId);
             const gradedCategories = categories.map(category => {
-                const assignments  = grades.filter(g => (g.categoryId === category.id) && g.isGraded);
+                const assignments = grades.filter(g => (g.categoryId === category.id) && g.isGraded);
                 const earnedPoints = Util.sum(assignments, a => a.exempt ? 0 : a.earnedPoints);
-                const maxPoints    = Util.sum(assignments, a => a.extraCredit || a.exempt ? 0 : a.maxPoints);
-                const average = maxPoints !== 0 ? earnedPoints / maxPoints : 0;
+                const maxPoints = Util.sum(assignments, a => a.extraCredit || a.exempt ? 0 : a.maxPoints);
+                const average = earnedPoints / maxPoints;
                 const percentage = average * 100;
                 return {
                     ...category,
@@ -106,6 +106,7 @@ class GradingService {
                     maxPoints: maxPoints,
                     average: average,
                     percentage: percentage,
+                    earnedAverage: average * category.weight,
                     letterGrade: this.getLetterGrade(this.schema, percentage),
                 };
             });
@@ -118,8 +119,8 @@ class GradingService {
     }
 
     calculateStudentData(student, studentCategories) {
-        const earnedAverage = Util.sum(studentCategories, cat => cat.average * cat.weight);
-        const totalWeight   = Util.sum(studentCategories, cat => cat.maxPoints === 0 ? 0 : cat.weight);
+        const earnedAverage = Util.sum(studentCategories, c => isNaN(c.earnedAverage) ? 0 : c.earnedAverage);
+        const totalWeight   = Util.sum(studentCategories, c => c.maxPoints === 0      ? 0 : c.weight);
         const percent       = earnedAverage / totalWeight;
 
         const studentInfo = {
@@ -131,7 +132,7 @@ class GradingService {
             categories: studentCategories,
         };
         if (totalWeight === 0) {
-            console.warn(`Student ${student.name} (id: ${student.userId}) has no assignments`);
+            console.warn(`Student ${student.name} (id: ${student.userId}) has no gradable assignments`);
         }
         return studentInfo;
     }

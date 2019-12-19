@@ -20,8 +20,8 @@ function AssignmentEntry(assignment, gradedAssignment, category, input) {
 
         // When gradedAssignment is undefined (that happends when no grade is given to an assignment),
         // then there should be blank fields, so set the properties to blank strings
-        self.earnedScore (earnedScore || earnedScore === 0 ? earnedScore : '');
-        self.earnedPoints(earnedPoints || earnedPoints === 0 ? earnedPoints : '');
+        self.earnedScore ((earnedScore || earnedScore === 0) ? earnedScore : '');
+        self.earnedPoints((earnedPoints || earnedPoints === 0) ? earnedPoints : '');
         self.percentage  (percentage ? percentage : '');
         
         self.letterGrade(gradedAssignment.letterGrade);

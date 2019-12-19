@@ -11,14 +11,16 @@ const Util = {
     },
 }
 
-ko.bindingHandlers.percent = {
+ko.bindingHandlers.fixed = {
     update: function (element, valueAccessor, allBindings) {
         const numberValue = ko.utils.unwrapObservable(valueAccessor());
-        if (!numberValue) {
+        if (isNaN(numberValue) || !numberValue) {
+            ko.bindingHandlers.text.update(element, () => '');
             return;
         }
         
-        const text = numberValue.toFixed(allBindings.get('fracDigits') || 0);
-        ko.bindingHandlers.text.update(element, () => text);
+        const text = numberValue.toFixed(allBindings.get('digits') || 0);
+        const terminationChar = allBindings.get('percent') ? '%' : '';
+        ko.bindingHandlers.text.update(element, () => text + terminationChar);
     }
 }
