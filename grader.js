@@ -36,52 +36,46 @@ class GradingService {
         for (const grade of grades) {
             const assignment = assignments.find(item => item.id === grade.assignmentId);
 
+            const [numericGrade, exempt]= (() => {
+                const possibleNumericGrade = parseInt(grade.grade);
+                if (isNaN(possibleNumericGrade)) {
+                    const scoreCode = scoreCodes.find(scoreCode => scoreCode.code === grade.grade);
+                    if (scoreCode && !scoreCode.exempt) {
+                        return [scoreCode.percent / 100 * assignment.maxScore, false];
+                    } else {
+                        console.warn('Ungraded assignment, cause: scoreCode does not exist or grade is not a number');
+                        return [NaN, true]
+                    }
+                } else {
+                    return [possibleNumericGrade, false];
+                }
+            })();
+
             const gradedAssignment = {
                 id: grade.id,
                 categoryId: assignment.categoryId,
                 assignmentId: assignment.id,
                 userId: grade.userId,
                 extraCredit: assignment.extraCredit,
-                exempt: false,
+                exempt: exempt,
                 maxScore: assignment.maxScore,
                 maxPoints: assignment.points,
-                isGraded: true,
-                earnedScore: NaN,
-                grade: NaN,
-                earnedPoints: NaN,
+                earnedScore: numericGrade,
+                grade: null,
+                earnedPoints: undefined,
                 percentage: NaN,
                 letterGrade: undefined,
             };
     
-            let numericGrade = parseInt(grade.grade);
-            if (isNaN(numericGrade)) {
-                const scoreCode = scoreCodes.find(scoreCode => scoreCode.code === grade.grade);
-                if (scoreCode) {
-                    numericGrade = scoreCode.percent / 100 * gradedAssignment.maxScore;
-                    gradedAssignment.exempt = scoreCode.exempt;
-                } else {
-                    console.warn('Ungraded assignment, cause: scoreCode does not exist or grade is not a number', gradedAssignment, assignment.name);
-                    gradedAssignment.isGraded = false;
-                }
+            if (!gradedAssignment.exempt) {
+                gradedAssignment.grade        = gradedAssignment.earnedScore / gradedAssignment.maxScore;
+                gradedAssignment.earnedPoints = gradedAssignment.grade * gradedAssignment.maxPoints;
+                gradedAssignment.percentage   = gradedAssignment.grade * 100;
+                gradedAssignment.letterGrade  = this.getLetterGrade(this.schema, gradedAssignment.percentage);
             }
-    
-            gradedAssignment.earnedScore  = numericGrade;
-            gradedAssignment.grade        = gradedAssignment.earnedScore / gradedAssignment.maxScore;
-    
-            gradedAssignment.earnedPoints = gradedAssignment.grade * gradedAssignment.maxPoints;
-            gradedAssignment.percentage = gradedAssignment.grade * 100;
 
-            gradedAssignment.letterGrade = this.getLetterGrade(this.schema, gradedAssignment.percentage);
-    
-            if (assignment.maxScore === 0) {
-                console.warn('Ungraded assignment, cause: a maxScore of 0', gradedAssignment, assignment.name);
-                gradedAssignment.isGraded = false;
-            }
-    
-            if (gradedAssignment.maxPoints < 0 && gradedAssignment.maxScore     < 0 &&
-                gradedAssignment.grade     < 0 && gradedAssignment.earnedPoints < 0) {
-                console.warn('Ungraded assignment, cause: negative value(s)', gradedAssignment, assignment.name);
-                gradedAssignment.isGraded = false;
+            if (gradedAssignment.maxScore <= 0 && gradedAssignment.grade < 0) {
+                gradsedAssignment.exempt = true;
             }
 
             gradedAssignments.push(gradedAssignment);
@@ -94,9 +88,9 @@ class GradingService {
         for (const student of students) {
             const grades = gradedAssignments.filter(g => g.userId === student.userId);
             const gradedCategories = categories.map(category => {
-                const assignments = grades.filter(g => (g.categoryId === category.id) && g.isGraded);
+                const assignments = grades.filter(g => g.categoryId === category.id).reduce( (a, b => a + b));
                 const earnedPoints = Util.sum(assignments, a => a.exempt ? 0 : a.earnedPoints);
-                const maxPoints = Util.sum(assignments, a => a.extraCredit || a.exempt ? 0 : a.maxPoints);
+                const maxPoints = Util.sum(assignments, a => (a.extraCredit || a.exempt) ? 0 : a.maxPoints);
                 const average = earnedPoints / maxPoints;
                 const percentage = average * 100;
                 return {
