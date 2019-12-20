@@ -10,18 +10,8 @@ function ViewModel() {
 
     const _gradingService = new GradingService(GradingSchemas.letter);
 
-    self.student;
-
-    self.categories        = [];
-
-    self.assignments       = [];
-    self.grades            = [];
-    self.scoreCodes        = [];
-    self.gradedAssignments = [];
-
     self.assignmentView   = ko.observableArray();
     self.categoriesView   = ko.observableArray();
-
     self.overallGrade     = ko.observable();
 
     self.updateAssignmentEntry = function(newGrade) {
@@ -46,10 +36,9 @@ function ViewModel() {
             self.categories,
             gradedAssignments
         )[0].categories;
-        const categoriesView = gradedCategories.map(gradedCategory => new CategoryEntry(gradedCategory));
         const overall = _gradingService.calculateStudentData(self.student, gradedCategories).percentage;
 
-        self.categoriesView(categoriesView);
+        self.categoriesView(gradedCategories);
         self.overallGrade(overall);
     }
 
@@ -67,9 +56,13 @@ function ViewModel() {
         gradedAssignments = _gradingService.gradeAssignments(assignments, newGrades, scoreCodes);
 
         const assignmentView = assignments.map(assignment => {
-            const gradedAssignment = gradedAssignments.find(ga => assignment.id === ga.assignmentId);
+            const gradedAssignment   = gradedAssignments.find(ga => assignment.id === ga.assignmentId);
             const assignmentCategory = categories.find(c => assignment.categoryId === c.id);
-            return new AssignmentEntry(assignment, gradedAssignment, assignmentCategory);
+            return new AssignmentEntry(
+                { ...assignmentCategory, ...assignment, categoryName: assignmentCategory.name },
+                gradedAssignment,
+                self.updateAssignmentEntry
+            );
         });
 
         self.student = student;
@@ -79,12 +72,6 @@ function ViewModel() {
         self.grades = newGrades;
         self.assignmentView(assignmentView);
 
-        //is it possible to remove this?
-        for (const assignmentEntry of assignmentView) {
-            assignmentEntry.earnedScore.subscribe(self.updateAssignmentEntry, assignmentEntry);
-            assignmentEntry.earnedScore.extend({ rateLimit: { timeout: 300, method: 'notifyWhenChangesStop' } });
-        }
-
-        self.updateSummery()
+        self.updateSummery();
     }
 }

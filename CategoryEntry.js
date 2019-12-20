@@ -1,7 +1,7 @@
 function CategoryEntry(gradedCategory) {
   const self = this;
 
-  self.displayName  = `${gradedCategory.name} (${gradedCategory.weight})`;
+  self.name         = gradedCategory.name;
   self.weight       = gradedCategory.weight;
   self.earnedPoints = gradedCategory.earnedPoints;
   self.maxPoints    = gradedCategory.maxPoints;

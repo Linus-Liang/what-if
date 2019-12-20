@@ -8,7 +8,7 @@ const Util = {
             return Util.add(array.map(funcOrProp));
         }
         return Util.add(array.map(item => item[funcOrProp]));
-    },
+    }
 }
 
 ko.bindingHandlers.fixed = {

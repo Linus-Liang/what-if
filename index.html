@@ -25,7 +25,10 @@
         </tbody>
         <tbody data-bind="foreach: { data: categoriesView, as: 'categoryEntry' }">
           <tr>
-            <td data-bind="text: categoryEntry.displayName"></td>
+            <td>
+              <span data-bind="text: categoryEntry.name"></span>
+              (<span data-bind="text: categoryEntry.weight"></span>)
+            </td>
             <td style="text-align: center;">
               <span data-bind="fixed: categoryEntry.earnedPoints, digits: 2"></span>
               /
@@ -94,7 +97,7 @@
 
     <script src="utils.js"></script>
     
-    <script src="grader.js"></script>
+    <script src="GradingService.js"></script>
 
     <script src="AssignmentEntry.js"></script>
     <script src="CategoryEntry.js"></script>
