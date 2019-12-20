@@ -1,4 +1,4 @@
-const view = new ViewModel();
+const view = new StudentGradesViewModel();
 
 function reformatData(data, sectionSelection) {
     const selectedData = data.result[sectionSelection];
@@ -31,7 +31,8 @@ function reformatData(data, sectionSelection) {
 }
 
 function applyData(data) {
-    view.init.apply(null, reformatData(data, 0));
+    const formatedData = reformatData(data, 0);
+    view.init(formatedData[0], formatedData[1], formatedData[2], formatedData[3], formatedData[4]);
 }
 
 async function loadServerData(url) {
