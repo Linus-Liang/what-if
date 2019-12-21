@@ -62,8 +62,7 @@ class StudentGradesViewModel {
             const assignmentCategory = categories.find(c => assignment.categoryId === c.id);
             return new AssignmentEntry(
                 { ...assignmentCategory, ...assignment, categoryName: assignmentCategory.name },
-                gradedAssignment,
-                this
+                gradedAssignment, this
             );
         });
 

@@ -9,4 +9,3 @@ class CategoryEntry {
         this.letterGrade  = gradedCategory.letterGrade;
     }
 }
-
