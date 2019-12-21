@@ -1,11 +1,12 @@
-function CategoryEntry(gradedCategory) {
-  const self = this;
-
-  self.name         = gradedCategory.name;
-  self.weight       = gradedCategory.weight;
-  self.earnedPoints = gradedCategory.earnedPoints;
-  self.maxPoints    = gradedCategory.maxPoints;
-  self.earnedWeight = gradedCategory.average * gradedCategory.weight;
-  self.percentage   = gradedCategory.percentage;
-  self.letterGrade  = gradedCategory.letterGrade;
+class CategoryEntry {
+    constructor(gradedCategory) {
+        this.name         = gradedCategory.name;
+        this.weight       = gradedCategory.weight;
+        this.earnedPoints = gradedCategory.earnedPoints;
+        this.maxPoints    = gradedCategory.maxPoints;
+        this.earnedWeight = gradedCategory.average * gradedCategory.weight;
+        this.percentage   = gradedCategory.percentage;
+        this.letterGrade  = gradedCategory.letterGrade;
+    }
 }
+
